@@ -14,6 +14,7 @@ const resetBtn = document.getElementById("resetBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 const playerSelect = document.getElementById("playerSelect");
 const turnInfoEl = document.getElementById("turnInfo");
+const resetTurnBtn = document.getElementById("resetTurnBtn");
 const nextTurnBtn = document.getElementById("nextTurnBtn");
 const collectionList = document.getElementById("collectionList");
 const collectionTotalEl = document.getElementById("collectionTotal");
@@ -22,6 +23,7 @@ const turnHistoryList = document.getElementById("turnHistoryList");
 const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const importInput = document.getElementById("importInput");
+const resetGameBtn = document.getElementById("resetGameBtn");
 
 // Each player digs their own private board: a fresh, independently random
 // layout nobody else can see or is influenced by. Keyed by player id, kept
@@ -188,6 +190,14 @@ showAllBtn.addEventListener("click", () => {
   refreshAll();
 });
 
+resetTurnBtn.addEventListener("click", () => {
+  if (!confirm(`Redo Turn ${Database.currentTurn(playerRecord()).turnNumber} for ${Database.PLAYER_LABELS[currentPlayer()]} from scratch (0/${MAX_DIGS_PER_TURN} picks)?`)) return;
+  Database.resetCurrentTurn(currentPlayer());
+  gridsByPlayer[currentPlayer()] = createGridData();
+  renderGrid();
+  refreshAll();
+});
+
 nextTurnBtn.addEventListener("click", () => {
   Database.startNewTurn(currentPlayer());
   gridsByPlayer[currentPlayer()] = createGridData();
@@ -204,6 +214,16 @@ playerSelect.addEventListener("change", () => {
 resetCollectionBtn.addEventListener("click", () => {
   if (!confirm(`Clear ${Database.PLAYER_LABELS[currentPlayer()]}'s entire history? This can't be undone.`)) return;
   Database.resetPlayer(currentPlayer());
+  gridsByPlayer[currentPlayer()] = createGridData();
+  renderGrid();
+  refreshAll();
+});
+
+resetGameBtn.addEventListener("click", () => {
+  if (!confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) return;
+  Database.resetAll();
+  Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
+  renderGrid();
   refreshAll();
 });
 

@@ -27,8 +27,14 @@ Digging is turn-based: **each turn caps out at 10 picks** per player. The
 turn bar shows picks used (e.g. "Turn 2 — 6/10 picks used"); once the cap is
 hit, remaining tiles dim and stop responding, and **Show All** only reveals
 up to however many picks are left in the turn (never more than 10 total).
-**Next Turn** starts a fresh turn — a new grid and a reset 10-pick
-allowance — without touching picks used or resources dug in earlier turns.
+
+- **Reset Turn** redoes the *current* turn from scratch (0/10 picks, fresh
+  board) without touching earlier turns or the turn number.
+- **Next Turn** starts a brand new turn — a new grid and a reset 10-pick
+  allowance — leaving every earlier turn's results alone.
+- **Reset Grid** just reshuffles the current board without changing picks
+  used or any recorded results.
+
 Reachable from the title screen's Play button, at `dig-grid.html`.
 
 - `dig-grid.html` — page markup, player and turn controls, game container
@@ -46,7 +52,8 @@ be compared turn by turn, not just as one lifetime figure. Switching the
 "Playing as" / "Viewing" dropdown (on the Dig Grid or the title screen's
 Collection modal) switches whose data you're adding to or looking at.
 "Reset This Player" clears a player's entire turn history (with a
-confirmation prompt).
+confirmation prompt); **Reset Game (All Players)** does the same for
+Player One, Two, and Three at once, for starting the whole game over.
 
 Records live in a flat-file JSON database — one object keyed by player, each
 holding an ordered array of turn records — persisted to `localStorage` for
@@ -55,5 +62,5 @@ Database** on the Dig Grid page, which write and read that same JSON
 structure as an actual `.json` file.
 
 - `js/database.js` — the flat-file database: load/save, per-turn digs,
-  starting new turns, per-player reset, lifetime aggregation, file
-  export/import
+  starting new turns, resetting the current turn, per-player reset,
+  resetting every player at once, lifetime aggregation, file export/import

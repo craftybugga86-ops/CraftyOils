@@ -121,6 +121,16 @@ const Database = (() => {
     return db;
   }
 
+  // Redo the player's current turn from scratch — its digs go back to 0/
+  // MAX_DIGS_PER_TURN — without touching earlier turns or the turn number.
+  function resetCurrentTurn(playerId) {
+    const db = load();
+    const turns = db[playerId].turns;
+    turns[turns.length - 1] = emptyTurn(turns[turns.length - 1].turnNumber);
+    save(db);
+    return db;
+  }
+
   function resetPlayer(playerId) {
     const db = load();
     db[playerId] = emptyPlayerRecord();
@@ -185,7 +195,7 @@ const Database = (() => {
     PLAYERS, PLAYER_LABELS, TYPE_INFO, MAX_DIGS_PER_TURN,
     load, save, getCurrentPlayer, setCurrentPlayer,
     currentTurn, turnDigCount, turnTotal,
-    addDig, startNewTurn, resetPlayer, resetAll,
+    addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll,
     aggregate, grandTotal,
     exportFile, importFile,
   };

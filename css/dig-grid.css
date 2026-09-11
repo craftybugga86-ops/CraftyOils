@@ -248,3 +248,5 @@ button:hover { filter: brightness(1.05); }
   text-decoration: underline;
 }
 .text-btn:hover { color: var(--gold); }
+.text-btn.danger { color: #d9694f; }
+.text-btn.danger:hover { color: #ff8a6b; }
