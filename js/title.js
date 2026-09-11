@@ -25,9 +25,10 @@ function renderCollection() {
   const collectionList = document.getElementById("collectionList");
   const collectionTotalEl = document.getElementById("collectionTotal");
   const record = Database.load()[collectionPlayerSelect.value];
+  const agg = Database.aggregate(record);
   collectionList.innerHTML = "";
   Object.entries(Database.TYPE_INFO).forEach(([type, info]) => {
-    const entry = record[type];
+    const entry = agg[type];
     const row = document.createElement("li");
     row.innerHTML =
       `<span class="collection-icon">${info.icon}</span>` +

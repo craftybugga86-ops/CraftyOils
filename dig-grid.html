@@ -22,6 +22,11 @@
   </select>
 </label>
 
+<div class="turn-bar">
+  <span id="turnInfo">Turn 1 — 0/10 picks used</span>
+  <button id="nextTurnBtn" class="text-btn">Next Turn</button>
+</div>
+
 <div class="stats">
   <div>Total: <span id="total">0</span></div>
   <div>Revealed: <span id="count">0</span>/81</div>
@@ -46,6 +51,11 @@
     <button id="importBtn" class="text-btn">Import Database</button>
     <input type="file" id="importInput" accept="application/json" hidden>
   </div>
+</div>
+
+<div class="collection">
+  <h2>Turn History <span class="sub">— picks &amp; totals by turn</span></h2>
+  <ul class="turn-history-list" id="turnHistoryList"></ul>
 </div>
 
 <script src="js/database.js"></script>

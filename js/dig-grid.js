@@ -5,6 +5,7 @@ const ICONS = {
 };
 const TYPES = Object.keys(ICONS);
 const GRID_SIZE = 9;
+const MAX_DIGS_PER_TURN = Database.MAX_DIGS_PER_TURN;
 
 const grid = document.getElementById("grid");
 const totalEl = document.getElementById("total");
@@ -12,9 +13,12 @@ const countEl = document.getElementById("count");
 const resetBtn = document.getElementById("resetBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 const playerSelect = document.getElementById("playerSelect");
+const turnInfoEl = document.getElementById("turnInfo");
+const nextTurnBtn = document.getElementById("nextTurnBtn");
 const collectionList = document.getElementById("collectionList");
 const collectionTotalEl = document.getElementById("collectionTotal");
 const resetCollectionBtn = document.getElementById("resetCollectionBtn");
+const turnHistoryList = document.getElementById("turnHistoryList");
 const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const importInput = document.getElementById("importInput");
@@ -42,12 +46,31 @@ function currentPlayer() {
   return playerSelect.value;
 }
 
+function playerRecord() {
+  return Database.load()[currentPlayer()];
+}
+
+// Refreshes the turn indicator and locks digging once the turn's cap is hit.
+// Returns the current dig count so callers can act on it without re-reading.
+function updateTurnInfo() {
+  const record = playerRecord();
+  const turn = Database.currentTurn(record);
+  const used = Database.turnDigCount(turn);
+  const limitReached = used >= MAX_DIGS_PER_TURN;
+  turnInfoEl.textContent = limitReached
+    ? `Turn ${turn.turnNumber} — limit reached (${used}/${MAX_DIGS_PER_TURN}). Start Next Turn to keep digging.`
+    : `Turn ${turn.turnNumber} — ${used}/${MAX_DIGS_PER_TURN} picks used`;
+  grid.classList.toggle("limit-reached", limitReached);
+  showAllBtn.disabled = limitReached;
+  return used;
+}
+
 function renderCollection() {
-  const db = Database.load();
-  const record = db[currentPlayer()];
+  const record = playerRecord();
+  const agg = Database.aggregate(record);
   collectionList.innerHTML = "";
   Object.entries(Database.TYPE_INFO).forEach(([type, info]) => {
-    const entry = record[type];
+    const entry = agg[type];
     const row = document.createElement("li");
     row.innerHTML =
       `<span class="collection-icon">${info.icon}</span>` +
@@ -57,6 +80,26 @@ function renderCollection() {
     collectionList.appendChild(row);
   });
   collectionTotalEl.textContent = Database.grandTotal(record);
+}
+
+function renderTurnHistory() {
+  const record = playerRecord();
+  turnHistoryList.innerHTML = "";
+  record.turns.forEach(turn => {
+    const used = Database.turnDigCount(turn);
+    const row = document.createElement("li");
+    row.innerHTML =
+      `<span class="turn-number">Turn ${turn.turnNumber}</span>` +
+      `<span class="turn-digs">${used}/${MAX_DIGS_PER_TURN} picks</span>` +
+      `<span class="turn-total">${Database.turnTotal(turn)}</span>`;
+    turnHistoryList.appendChild(row);
+  });
+}
+
+function refreshAll() {
+  updateTurnInfo();
+  renderCollection();
+  renderTurnHistory();
 }
 
 function buildGrid() {
@@ -79,6 +122,8 @@ function buildGrid() {
 
     cell.addEventListener("click", () => {
       if (cell.classList.contains("revealed")) return;
+      if (Database.turnDigCount(Database.currentTurn(playerRecord())) >= MAX_DIGS_PER_TURN) return;
+
       cell.classList.add("revealed", "pop");
       cell.textContent = reward;
       total += reward;
@@ -86,8 +131,8 @@ function buildGrid() {
       totalEl.textContent = total;
       countEl.textContent = revealedCount;
 
-      Database.add(currentPlayer(), type, reward);
-      renderCollection();
+      Database.addDig(currentPlayer(), type, reward);
+      refreshAll();
     });
 
     grid.appendChild(cell);
@@ -97,29 +142,39 @@ function buildGrid() {
 resetBtn.addEventListener("click", buildGrid);
 
 showAllBtn.addEventListener("click", () => {
-  document.querySelectorAll(".cell:not(.revealed)").forEach(cell => {
+  let used = Database.turnDigCount(Database.currentTurn(playerRecord()));
+  const unrevealed = Array.from(document.querySelectorAll(".cell:not(.revealed)"));
+  for (const cell of unrevealed) {
+    if (used >= MAX_DIGS_PER_TURN) break;
     const type = cell.dataset.type;
     const reward = Number(cell.dataset.reward);
     cell.classList.add("revealed", "pop");
     cell.textContent = reward;
     total += reward;
     revealedCount++;
-    Database.add(currentPlayer(), type, reward);
-  });
+    Database.addDig(currentPlayer(), type, reward);
+    used++;
+  }
   totalEl.textContent = total;
   countEl.textContent = revealedCount;
-  renderCollection();
+  refreshAll();
+});
+
+nextTurnBtn.addEventListener("click", () => {
+  Database.startNewTurn(currentPlayer());
+  buildGrid();
+  refreshAll();
 });
 
 playerSelect.addEventListener("change", () => {
   Database.setCurrentPlayer(currentPlayer());
-  renderCollection();
+  refreshAll();
 });
 
 resetCollectionBtn.addEventListener("click", () => {
-  if (!confirm(`Clear ${Database.PLAYER_LABELS[currentPlayer()]}'s entire resource collection? This can't be undone.`)) return;
+  if (!confirm(`Clear ${Database.PLAYER_LABELS[currentPlayer()]}'s entire history? This can't be undone.`)) return;
   Database.resetPlayer(currentPlayer());
-  renderCollection();
+  refreshAll();
 });
 
 exportBtn.addEventListener("click", () => {
@@ -135,7 +190,7 @@ importInput.addEventListener("change", () => {
   if (!file) return;
   Database.importFile(
     file,
-    () => renderCollection(),
+    () => refreshAll(),
     () => alert("Couldn't read that file — make sure it's a Crafty Oils database export.")
   );
   importInput.value = "";
@@ -143,4 +198,4 @@ importInput.addEventListener("change", () => {
 
 playerSelect.value = Database.getCurrentPlayer();
 buildGrid();
-renderCollection();
+refreshAll();
