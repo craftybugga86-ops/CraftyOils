@@ -28,11 +28,14 @@ h1 {
 }
 .turn-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 8px 14px;
   font-size: 0.9rem;
   color: #9aa0a6;
   margin-bottom: 10px;
+  width: 100%;
+  max-width: 460px;
 }
 .stats {
   display: flex;
@@ -46,9 +49,10 @@ h1 {
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(9, 48px);
-  grid-template-rows: repeat(9, 48px);
+  grid-template-columns: repeat(9, 1fr);
   gap: 5px;
+  width: 100%;
+  max-width: 460px;
   background: #14171b;
   padding: 8px;
   border-radius: 10px;
@@ -64,15 +68,15 @@ h1 {
 }
 .cell {
   position: relative;
-  width: 48px;
-  height: 48px;
+  aspect-ratio: 1;
+  min-width: 0;
   background: var(--cell-bg);
   border: 1px solid var(--cell-border);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: clamp(14px, 4.2vw, 22px);
   cursor: pointer;
   user-select: none;
   transition: transform 0.12s ease, background 0.2s ease;
@@ -83,7 +87,7 @@ h1 {
 }
 .cell.revealed {
   cursor: default;
-  font-size: 15px;
+  font-size: clamp(11px, 3.2vw, 15px);
   font-weight: 700;
   color: #fff;
 }
