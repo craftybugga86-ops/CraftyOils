@@ -75,10 +75,18 @@ title screen's Collection modal for whichever player is being viewed. The
 badge gives a brief "blowout" pulse the moment a turn actually beats the
 player's previous record.
 
-If tiles ever stop responding for every player, it isn't a bug in the grid
-— it means every player has used all 10 picks in their current turn. That
-state now surfaces itself: a banner reading "All three players have used
-their picks" appears right above the grid, with its own **Reset Game (All
-Players)** button, the moment the last player hits the cap — rather than
-requiring a scroll down to the smaller copy of that control in the
-Collection panel.
+Tiles stopping for one player while the others are still free to dig is
+expected — each player's 10-pick cap is independent — but it used to be easy
+to mistake for the game being broken, since the only sign was a small line
+of text. Two banners now make each case obvious:
+
+- The moment the *currently selected* player hits 10/10, a banner names
+  them directly ("Player One has used all 10 picks this turn.") with a
+  real, gold **Next Turn** button right in it.
+- The moment *all three* players are capped, a second banner replaces it
+  with **Reset Game (All Players)** — for starting the whole game over.
+
+(An earlier version of the all-players banner had a CSS bug that let it
+show even when not all players were capped, since its own `display: flex`
+rule silently overrode the browser's default for a hidden element — fixed
+by scoping that override to `.all-capped-banner[hidden]`.)

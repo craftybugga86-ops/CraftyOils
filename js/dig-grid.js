@@ -26,6 +26,9 @@ const importInput = document.getElementById("importInput");
 const resetGameBtn = document.getElementById("resetGameBtn");
 const allCappedBanner = document.getElementById("allCappedBanner");
 const allCappedResetBtn = document.getElementById("allCappedResetBtn");
+const playerCappedBanner = document.getElementById("playerCappedBanner");
+const playerCappedText = document.getElementById("playerCappedText");
+const nextTurnBannerBtn = document.getElementById("nextTurnBannerBtn");
 const gusherBadge = document.getElementById("gusherBadge");
 const gusherTotalEl = document.getElementById("gusherTotal");
 const gusherTurnEl = document.getElementById("gusherTurn");
@@ -148,12 +151,27 @@ function renderGusher() {
 
 // Surfaces the fix (Reset Game) right up top the moment every player is
 // stuck at their pick cap, instead of leaving it to be found by scrolling.
+// Returns whether all three are capped, so the per-player banner below can
+// stay quiet rather than pile a second banner on top of this one.
 function updateAllCappedBanner() {
   const db = Database.load();
   const allCapped = Database.PLAYERS.every(
     id => Database.turnDigCount(Database.currentTurn(db[id])) >= MAX_DIGS_PER_TURN
   );
   allCappedBanner.hidden = !allCapped;
+  return allCapped;
+}
+
+// Puts a real, unmissable "Next Turn" button front and center the instant
+// the *current* player is capped — not everyone, just them — since digging
+// stopping for one player while others still can is expected, not broken.
+function updatePlayerCappedBanner(allCapped) {
+  const used = Database.turnDigCount(Database.currentTurn(playerRecord()));
+  const capped = used >= MAX_DIGS_PER_TURN;
+  playerCappedBanner.hidden = allCapped || !capped;
+  if (capped) {
+    playerCappedText.textContent = `${Database.PLAYER_LABELS[currentPlayer()]} has used all ${MAX_DIGS_PER_TURN} picks this turn.`;
+  }
 }
 
 function resetGame() {
@@ -164,12 +182,20 @@ function resetGame() {
   refreshAll();
 }
 
+function nextTurn() {
+  Database.startNewTurn(currentPlayer());
+  gridsByPlayer[currentPlayer()] = createGridData();
+  renderGrid();
+  refreshAll();
+}
+
 function refreshAll() {
   updateTurnInfo();
   renderCollection();
   renderTurnHistory();
   renderGusher();
-  updateAllCappedBanner();
+  const allCapped = updateAllCappedBanner();
+  updatePlayerCappedBanner(allCapped);
 }
 
 // Renders the current player's own board from its stored cell data,
@@ -245,12 +271,8 @@ resetTurnBtn.addEventListener("click", () => {
   refreshAll();
 });
 
-nextTurnBtn.addEventListener("click", () => {
-  Database.startNewTurn(currentPlayer());
-  gridsByPlayer[currentPlayer()] = createGridData();
-  renderGrid();
-  refreshAll();
-});
+nextTurnBtn.addEventListener("click", nextTurn);
+nextTurnBannerBtn.addEventListener("click", nextTurn);
 
 playerSelect.addEventListener("change", () => {
   Database.setCurrentPlayer(currentPlayer());
