@@ -76,6 +76,9 @@ badge gives a brief "blowout" pulse the moment a turn actually beats the
 player's previous record.
 
 If tiles ever stop responding for every player, it isn't a bug in the grid
-— it means every player has used all 10 picks in their current turn.
-**Reset Game (All Players)** on the Dig Grid page brings everyone back to a
-clean Turn 1 with a full 10 picks again.
+— it means every player has used all 10 picks in their current turn. That
+state now surfaces itself: a banner reading "All three players have used
+their picks" appears right above the grid, with its own **Reset Game (All
+Players)** button, the moment the last player hits the cap — rather than
+requiring a scroll down to the smaller copy of that control in the
+Collection panel.

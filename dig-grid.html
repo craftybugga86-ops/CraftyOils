@@ -28,6 +28,11 @@
   <button id="nextTurnBtn" class="text-btn">Next Turn</button>
 </div>
 
+<div class="all-capped-banner" id="allCappedBanner" hidden>
+  <span>All three players have used their picks. Start fresh for everyone:</span>
+  <button id="allCappedResetBtn" class="btn-danger">Reset Game (All Players)</button>
+</div>
+
 <div class="stats">
   <div>Total: <span id="total">0</span></div>
   <div>Revealed: <span id="count">0</span>/81</div>
@@ -58,7 +63,7 @@
     <input type="file" id="importInput" accept="application/json" hidden>
   </div>
   <div class="collection-footer actions">
-    <button id="resetGameBtn" class="text-btn danger">Reset Game (All Players)</button>
+    <button id="resetGameBtn" class="btn-danger">Reset Game (All Players)</button>
   </div>
 </div>
 

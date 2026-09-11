@@ -24,6 +24,8 @@ const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const importInput = document.getElementById("importInput");
 const resetGameBtn = document.getElementById("resetGameBtn");
+const allCappedBanner = document.getElementById("allCappedBanner");
+const allCappedResetBtn = document.getElementById("allCappedResetBtn");
 const gusherBadge = document.getElementById("gusherBadge");
 const gusherTotalEl = document.getElementById("gusherTotal");
 const gusherTurnEl = document.getElementById("gusherTurn");
@@ -144,11 +146,30 @@ function renderGusher() {
   lastGusherByPlayer[playerId] = best.total;
 }
 
+// Surfaces the fix (Reset Game) right up top the moment every player is
+// stuck at their pick cap, instead of leaving it to be found by scrolling.
+function updateAllCappedBanner() {
+  const db = Database.load();
+  const allCapped = Database.PLAYERS.every(
+    id => Database.turnDigCount(Database.currentTurn(db[id])) >= MAX_DIGS_PER_TURN
+  );
+  allCappedBanner.hidden = !allCapped;
+}
+
+function resetGame() {
+  if (!confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) return;
+  Database.resetAll();
+  Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
+  renderGrid();
+  refreshAll();
+}
+
 function refreshAll() {
   updateTurnInfo();
   renderCollection();
   renderTurnHistory();
   renderGusher();
+  updateAllCappedBanner();
 }
 
 // Renders the current player's own board from its stored cell data,
@@ -245,13 +266,8 @@ resetCollectionBtn.addEventListener("click", () => {
   refreshAll();
 });
 
-resetGameBtn.addEventListener("click", () => {
-  if (!confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) return;
-  Database.resetAll();
-  Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
-  renderGrid();
-  refreshAll();
-});
+resetGameBtn.addEventListener("click", resetGame);
+allCappedResetBtn.addEventListener("click", resetGame);
 
 exportBtn.addEventListener("click", () => {
   Database.exportFile();

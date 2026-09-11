@@ -37,6 +37,32 @@ h1 {
   width: 100%;
   max-width: 460px;
 }
+.all-capped-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 460px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #7a3b2a;
+  border-radius: 8px;
+  background: rgba(217, 105, 79, 0.12);
+  color: #f0c4b8;
+  font-size: 0.85rem;
+}
+.btn-danger {
+  background: #d9694f;
+  color: #1b1f24;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-danger:hover { background: #ff8a6b; }
 .stats {
   display: flex;
   gap: 24px;
@@ -279,5 +305,3 @@ button:hover { filter: brightness(1.05); }
   text-decoration: underline;
 }
 .text-btn:hover { color: var(--gold); }
-.text-btn.danger { color: #d9694f; }
-.text-btn.danger:hover { color: #ff8a6b; }
