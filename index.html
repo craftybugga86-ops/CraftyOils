@@ -3,27 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dig Grid</title>
-<link rel="stylesheet" href="css/dig-grid.css">
+<title>Crafty Oils</title>
+<link rel="stylesheet" href="css/title.css">
 </head>
 <body>
 
-<h1>⛏️ Dig Grid</h1>
-<div class="sub">Click a tile to dig — reveal a reward from 0–89</div>
+<div class="title-screen">
+  <div class="rig">🛢️</div>
+  <h1 class="logo">CRAFTY<span class="accent">OILS</span></h1>
+  <p class="tagline">Strike it rich, one tile at a time.</p>
 
-<div class="stats">
-  <div>Total: <span id="total">0</span></div>
-  <div>Revealed: <span id="count">0</span>/81</div>
+  <nav class="menu">
+    <a class="menu-btn primary" href="dig-grid.html">Play</a>
+    <button class="menu-btn" id="howToPlayBtn" type="button">How To Play</button>
+    <button class="menu-btn" id="settingsBtn" type="button">Settings</button>
+    <button class="menu-btn" id="creditsBtn" type="button">Credits</button>
+  </nav>
 </div>
 
-<div class="grid" id="grid"></div>
-
-<div class="controls">
-  <button id="resetBtn">Reset Grid</button>
-  <button id="showAllBtn">Show All</button>
+<div class="overlay" id="howToPlayModal" hidden>
+  <div class="modal">
+    <h2>How To Play</h2>
+    <ul>
+      <li>Click a tile on the Dig Grid to dig it up.</li>
+      <li>Each tile hides dirt, rock, or an oil well — and a reward from 0–89.</li>
+      <li>Your total climbs as you reveal more tiles.</li>
+      <li>Use <strong>Show All</strong> to peek every remaining reward.</li>
+      <li>Use <strong>Reset Grid</strong> to dig a fresh grid.</li>
+    </ul>
+    <button class="modal-close" data-close>Close</button>
+  </div>
 </div>
 
-<script src="js/dig-grid.js"></script>
+<div class="overlay" id="settingsModal" hidden>
+  <div class="modal">
+    <h2>Settings</h2>
+    <div class="row">
+      <span>Sound</span>
+      <button class="toggle" id="soundToggle" type="button" aria-pressed="false"></button>
+    </div>
+    <button class="modal-close" data-close>Close</button>
+  </div>
+</div>
+
+<div class="overlay" id="creditsModal" hidden>
+  <div class="modal">
+    <h2>Credits</h2>
+    <p>Crafty Oils<br>Built by the CraftyOils team.</p>
+    <button class="modal-close" data-close>Close</button>
+  </div>
+</div>
+
+<script src="js/title.js"></script>
 
 </body>
 </html>

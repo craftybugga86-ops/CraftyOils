@@ -116,3 +116,13 @@ button:hover { filter: brightness(1.05); }
   border: 1px solid var(--gold);
   color: var(--gold);
 }
+.back-link {
+  align-self: flex-start;
+  margin: 0 0 14px;
+  color: #9aa0a6;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.back-link:hover {
+  color: var(--gold);
+}
