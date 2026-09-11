@@ -13,6 +13,15 @@
 <h1>⛏️ Dig Grid</h1>
 <div class="sub">Click a tile to dig — reveal a reward from 0–89</div>
 
+<label class="player-select">
+  Playing as
+  <select id="playerSelect">
+    <option value="player1">Player One</option>
+    <option value="player2">Player Two</option>
+    <option value="player3">Player Three</option>
+  </select>
+</label>
+
 <div class="stats">
   <div>Total: <span id="total">0</span></div>
   <div>Revealed: <span id="count">0</span>/81</div>
@@ -30,11 +39,16 @@
   <ul class="collection-list" id="collectionList"></ul>
   <div class="collection-footer">
     <span>Grand Total: <span id="collectionTotal">0</span></span>
-    <button id="resetCollectionBtn" class="text-btn">Reset Collection</button>
+    <button id="resetCollectionBtn" class="text-btn">Reset This Player</button>
+  </div>
+  <div class="collection-footer actions">
+    <button id="exportBtn" class="text-btn">Export Database</button>
+    <button id="importBtn" class="text-btn">Import Database</button>
+    <input type="file" id="importInput" accept="application/json" hidden>
   </div>
 </div>
 
-<script src="js/collection.js"></script>
+<script src="js/database.js"></script>
 <script src="js/dig-grid.js"></script>
 
 </body>

@@ -14,13 +14,20 @@ Object.entries(modals).forEach(([btnId, modal]) => {
   });
 });
 
+const collectionPlayerSelect = document.getElementById("playerSelect");
+collectionPlayerSelect.value = Database.getCurrentPlayer();
+collectionPlayerSelect.addEventListener("change", () => {
+  Database.setCurrentPlayer(collectionPlayerSelect.value);
+  renderCollection();
+});
+
 function renderCollection() {
   const collectionList = document.getElementById("collectionList");
   const collectionTotalEl = document.getElementById("collectionTotal");
-  const data = Collection.load();
+  const record = Database.load()[collectionPlayerSelect.value];
   collectionList.innerHTML = "";
-  Object.entries(Collection.TYPE_INFO).forEach(([type, info]) => {
-    const entry = data[type] || { count: 0, total: 0 };
+  Object.entries(Database.TYPE_INFO).forEach(([type, info]) => {
+    const entry = record[type];
     const row = document.createElement("li");
     row.innerHTML =
       `<span class="collection-icon">${info.icon}</span>` +
@@ -29,7 +36,7 @@ function renderCollection() {
       `<span class="collection-value">${entry.total}</span>`;
     collectionList.appendChild(row);
   });
-  collectionTotalEl.textContent = Collection.grandTotal(data);
+  collectionTotalEl.textContent = Database.grandTotal(record);
 }
 
 document.querySelectorAll(".overlay").forEach(overlay => {
