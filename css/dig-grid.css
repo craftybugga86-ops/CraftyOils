@@ -126,3 +126,70 @@ button:hover { filter: brightness(1.05); }
 .back-link:hover {
   color: var(--gold);
 }
+
+.collection {
+  margin-top: 28px;
+  width: 100%;
+  max-width: 360px;
+  background: #14171b;
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.collection h2 {
+  font-size: 1rem;
+  margin: 0 0 12px;
+  color: var(--gold);
+  font-weight: 700;
+}
+.collection h2 .sub {
+  color: #9aa0a6;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+.collection-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.collection-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--cell-border);
+  font-size: 0.9rem;
+}
+.collection-list li:first-child { border-top: none; }
+.collection-icon { font-size: 18px; width: 22px; text-align: center; }
+.collection-label { flex: 1; }
+.collection-count { color: #9aa0a6; }
+.collection-value {
+  color: var(--gold);
+  font-weight: 700;
+  min-width: 36px;
+  text-align: right;
+}
+.collection-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cell-border);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.collection-footer #collectionTotal {
+  color: var(--gold);
+}
+.text-btn {
+  background: none;
+  border: none;
+  color: #9aa0a6;
+  font-size: 0.8rem;
+  font-weight: 400;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.text-btn:hover { color: var(--gold); }

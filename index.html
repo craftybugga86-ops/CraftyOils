@@ -15,10 +15,23 @@
 
   <nav class="menu">
     <a class="menu-btn primary" href="dig-grid.html">Play</a>
+    <button class="menu-btn" id="collectionBtn" type="button">Collection</button>
     <button class="menu-btn" id="howToPlayBtn" type="button">How To Play</button>
     <button class="menu-btn" id="settingsBtn" type="button">Settings</button>
     <button class="menu-btn" id="creditsBtn" type="button">Credits</button>
   </nav>
+</div>
+
+<div class="overlay" id="collectionModal" hidden>
+  <div class="modal">
+    <h2>Collection</h2>
+    <p class="modal-hint">Resources dug up across all your games.</p>
+    <ul class="collection-list" id="collectionList"></ul>
+    <div class="collection-footer">
+      <span>Grand Total: <span id="collectionTotal">0</span></span>
+    </div>
+    <button class="modal-close" data-close>Close</button>
+  </div>
 </div>
 
 <div class="overlay" id="howToPlayModal" hidden>
@@ -54,6 +67,7 @@
   </div>
 </div>
 
+<script src="js/collection.js"></script>
 <script src="js/title.js"></script>
 
 </body>

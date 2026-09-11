@@ -11,6 +11,9 @@ const totalEl = document.getElementById("total");
 const countEl = document.getElementById("count");
 const resetBtn = document.getElementById("resetBtn");
 const showAllBtn = document.getElementById("showAllBtn");
+const collectionList = document.getElementById("collectionList");
+const collectionTotalEl = document.getElementById("collectionTotal");
+const resetCollectionBtn = document.getElementById("resetCollectionBtn");
 
 let total = 0;
 let revealedCount = 0;
@@ -29,6 +32,22 @@ function randInt(min, max) {
     x = buf[0];
   } while (x > limit);
   return min + (x % range);
+}
+
+function renderCollection() {
+  const data = Collection.load();
+  collectionList.innerHTML = "";
+  Object.entries(Collection.TYPE_INFO).forEach(([type, info]) => {
+    const entry = data[type] || { count: 0, total: 0 };
+    const row = document.createElement("li");
+    row.innerHTML =
+      `<span class="collection-icon">${info.icon}</span>` +
+      `<span class="collection-label">${info.label}</span>` +
+      `<span class="collection-count">×${entry.count}</span>` +
+      `<span class="collection-value">${entry.total}</span>`;
+    collectionList.appendChild(row);
+  });
+  collectionTotalEl.textContent = Collection.grandTotal(data);
 }
 
 function buildGrid() {
@@ -57,6 +76,9 @@ function buildGrid() {
       revealedCount++;
       totalEl.textContent = total;
       countEl.textContent = revealedCount;
+
+      Collection.add(type, reward);
+      renderCollection();
     });
 
     grid.appendChild(cell);
@@ -75,4 +97,11 @@ showAllBtn.addEventListener("click", () => {
   });
 });
 
+resetCollectionBtn.addEventListener("click", () => {
+  if (!confirm("Clear your entire resource collection? This can't be undone.")) return;
+  Collection.reset();
+  renderCollection();
+});
+
 buildGrid();
+renderCollection();

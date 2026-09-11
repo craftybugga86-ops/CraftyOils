@@ -1,6 +1,7 @@
 const SOUND_KEY = "craftyoils.soundEnabled";
 
 const modals = {
+  collectionBtn: document.getElementById("collectionModal"),
   howToPlayBtn: document.getElementById("howToPlayModal"),
   settingsBtn: document.getElementById("settingsModal"),
   creditsBtn: document.getElementById("creditsModal"),
@@ -9,8 +10,27 @@ const modals = {
 Object.entries(modals).forEach(([btnId, modal]) => {
   document.getElementById(btnId).addEventListener("click", () => {
     modal.hidden = false;
+    if (btnId === "collectionBtn") renderCollection();
   });
 });
+
+function renderCollection() {
+  const collectionList = document.getElementById("collectionList");
+  const collectionTotalEl = document.getElementById("collectionTotal");
+  const data = Collection.load();
+  collectionList.innerHTML = "";
+  Object.entries(Collection.TYPE_INFO).forEach(([type, info]) => {
+    const entry = data[type] || { count: 0, total: 0 };
+    const row = document.createElement("li");
+    row.innerHTML =
+      `<span class="collection-icon">${info.icon}</span>` +
+      `<span class="collection-label">${info.label}</span>` +
+      `<span class="collection-count">×${entry.count}</span>` +
+      `<span class="collection-value">${entry.total}</span>`;
+    collectionList.appendChild(row);
+  });
+  collectionTotalEl.textContent = Collection.grandTotal(data);
+}
 
 document.querySelectorAll(".overlay").forEach(overlay => {
   overlay.addEventListener("click", (e) => {
