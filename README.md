@@ -64,3 +64,18 @@ structure as an actual `.json` file.
 - `js/database.js` — the flat-file database: load/save, per-turn digs,
   starting new turns, resetting the current turn, per-player reset,
   resetting every player at once, lifetime aggregation, file export/import
+
+## Biggest Gusher
+
+A per-turn high score, themed to the drilling setting rather than a generic
+"high score": each player's best single turn total is tracked and shown as
+a **🛢️ Biggest Gusher** badge — the total and which turn hit it (e.g.
+"Biggest Gusher: 512 (Turn 3)") — next to the Dig Grid's stats, and in the
+title screen's Collection modal for whichever player is being viewed. The
+badge gives a brief "blowout" pulse the moment a turn actually beats the
+player's previous record.
+
+If tiles ever stop responding for every player, it isn't a bug in the grid
+— it means every player has used all 10 picks in their current turn.
+**Reset Game (All Players)** on the Dig Grid page brings everyone back to a
+clean Turn 1 with a full 10 picks again.

@@ -231,3 +231,25 @@ body {
 .collection-footer #collectionTotal {
   color: var(--gold);
 }
+.gusher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px 14px;
+  border: 1px solid #6b4a2f;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(138,90,0,0.25), rgba(255,209,102,0.08));
+  font-size: 0.85rem;
+  color: #e8c990;
+}
+.gusher-icon { font-size: 1rem; }
+.gusher #gusherTotal {
+  color: var(--gold);
+  font-weight: 700;
+}
+#gusherTurn {
+  color: #9aa0a6;
+  font-weight: 400;
+  margin-left: 4px;
+}

@@ -38,6 +38,10 @@ function renderCollection() {
     collectionList.appendChild(row);
   });
   collectionTotalEl.textContent = Database.grandTotal(record);
+
+  const best = Database.bestTurn(record);
+  document.getElementById("gusherTotal").textContent = best.total;
+  document.getElementById("gusherTurn").textContent = best.turnNumber ? ` (Turn ${best.turnNumber})` : "";
 }
 
 document.querySelectorAll(".overlay").forEach(overlay => {

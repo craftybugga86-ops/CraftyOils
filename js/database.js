@@ -100,6 +100,15 @@ const Database = (() => {
     return Object.keys(TYPE_INFO).reduce((sum, type) => sum + turn[type].total, 0);
   }
 
+  // The player's single best turn by total — their "biggest gusher" — so a
+  // strong turn stands out rather than getting buried in the lifetime sum.
+  function bestTurn(playerRecord) {
+    return playerRecord.turns.reduce((best, turn) => {
+      const total = turnTotal(turn);
+      return total > best.total ? { turnNumber: turn.turnNumber, total } : best;
+    }, { turnNumber: null, total: 0 });
+  }
+
   // Records one dig against the player's current turn. No-ops (returns
   // added: false) once that turn has reached MAX_DIGS_PER_TURN — callers
   // should check turnDigCount() before offering the player another pick.
@@ -194,7 +203,7 @@ const Database = (() => {
   return {
     PLAYERS, PLAYER_LABELS, TYPE_INFO, MAX_DIGS_PER_TURN,
     load, save, getCurrentPlayer, setCurrentPlayer,
-    currentTurn, turnDigCount, turnTotal,
+    currentTurn, turnDigCount, turnTotal, bestTurn,
     addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll,
     aggregate, grandTotal,
     exportFile, importFile,

@@ -24,6 +24,13 @@ const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const importInput = document.getElementById("importInput");
 const resetGameBtn = document.getElementById("resetGameBtn");
+const gusherBadge = document.getElementById("gusherBadge");
+const gusherTotalEl = document.getElementById("gusherTotal");
+const gusherTurnEl = document.getElementById("gusherTurn");
+
+// Tracks each player's last-rendered biggest-gusher total, so we only
+// celebrate the moment a turn actually beats their previous record.
+const lastGusherByPlayer = {};
 
 // Each player digs their own private board: a fresh, independently random
 // layout nobody else can see or is influenced by. Keyed by player id, kept
@@ -119,10 +126,29 @@ function renderTurnHistory() {
   });
 }
 
+// The player's best single turn so far — their "biggest gusher" — with a
+// brief celebration the moment a turn actually beats their old record.
+function renderGusher() {
+  const playerId = currentPlayer();
+  const best = Database.bestTurn(playerRecord());
+
+  gusherTotalEl.textContent = best.total;
+  gusherTurnEl.textContent = best.turnNumber ? ` (Turn ${best.turnNumber})` : "";
+
+  const previousBest = lastGusherByPlayer[playerId] ?? 0;
+  gusherBadge.classList.remove("new-record");
+  if (best.total > 0 && best.total > previousBest) {
+    void gusherBadge.offsetWidth; // restart the animation if it's already mid-play
+    gusherBadge.classList.add("new-record");
+  }
+  lastGusherByPlayer[playerId] = best.total;
+}
+
 function refreshAll() {
   updateTurnInfo();
   renderCollection();
   renderTurnHistory();
+  renderGusher();
 }
 
 // Renders the current player's own board from its stored cell data,
