@@ -17,7 +17,11 @@ game elements are added, they'll get their own menu buttons here.
 
 A drilling mini-game mechanic: a 9x9 grid of hidden tiles (dirt, rock, or oil well).
 Clicking a tile digs it, revealing a reward value from 0–89. A "Playing as"
-dropdown picks which of Player One / Two / Three the digging counts toward.
+dropdown picks which of Player One / Two / Three the digging counts toward —
+each player digs their **own independently random, private board**: nobody
+sees what tiles the others have revealed, or is influenced by their layout.
+Switching players restores whatever that player had already dug on their own
+board; it doesn't reshuffle it.
 
 Digging is turn-based: **each turn caps out at 10 picks** per player. The
 turn bar shows picks used (e.g. "Turn 2 — 6/10 picks used"); once the cap is

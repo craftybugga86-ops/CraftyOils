@@ -23,8 +23,10 @@ const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const importInput = document.getElementById("importInput");
 
-let total = 0;
-let revealedCount = 0;
+// Each player digs their own private board: a fresh, independently random
+// layout nobody else can see or is influenced by. Keyed by player id, kept
+// only in memory for this session (a reload starts everyone over).
+const gridsByPlayer = {};
 
 // Cryptographically strong random integer in [min, max], with
 // rejection sampling to avoid modulo bias — gives a much more
@@ -42,6 +44,26 @@ function randInt(min, max) {
   return min + (x % range);
 }
 
+function createGridData() {
+  const cells = [];
+  const cellCount = GRID_SIZE * GRID_SIZE;
+  for (let i = 0; i < cellCount; i++) {
+    cells.push({
+      type: TYPES[randInt(0, TYPES.length - 1)],
+      reward: randInt(0, 89),
+      revealed: false,
+    });
+  }
+  return cells;
+}
+
+function getGridData(playerId) {
+  if (!gridsByPlayer[playerId]) {
+    gridsByPlayer[playerId] = createGridData();
+  }
+  return gridsByPlayer[playerId];
+}
+
 function currentPlayer() {
   return playerSelect.value;
 }
@@ -51,7 +73,6 @@ function playerRecord() {
 }
 
 // Refreshes the turn indicator and locks digging once the turn's cap is hit.
-// Returns the current dig count so callers can act on it without re-reading.
 function updateTurnInfo() {
   const record = playerRecord();
   const turn = Database.currentTurn(record);
@@ -102,72 +123,81 @@ function refreshAll() {
   renderTurnHistory();
 }
 
-function buildGrid() {
+// Renders the current player's own board from its stored cell data,
+// restoring whatever they'd already revealed rather than reshuffling it.
+function renderGrid() {
+  const playerId = currentPlayer();
+  const cellsData = getGridData(playerId);
+
   grid.innerHTML = "";
-  total = 0;
-  revealedCount = 0;
-  totalEl.textContent = total;
-  countEl.textContent = revealedCount;
+  let total = 0;
+  let revealedCount = 0;
 
-  const cellCount = GRID_SIZE * GRID_SIZE;
-  for (let i = 0; i < cellCount; i++) {
-    const type = TYPES[randInt(0, TYPES.length - 1)];
-    const reward = randInt(0, 89);
-
+  cellsData.forEach(cellData => {
     const cell = document.createElement("div");
-    cell.className = "cell " + type;
-    cell.textContent = ICONS[type];
-    cell.dataset.reward = reward;
-    cell.dataset.type = type;
+    cell.className = "cell " + cellData.type;
 
-    cell.addEventListener("click", () => {
-      if (cell.classList.contains("revealed")) return;
-      if (Database.turnDigCount(Database.currentTurn(playerRecord())) >= MAX_DIGS_PER_TURN) return;
-
-      cell.classList.add("revealed", "pop");
-      cell.textContent = reward;
-      total += reward;
+    if (cellData.revealed) {
+      cell.classList.add("revealed");
+      cell.textContent = cellData.reward;
+      total += cellData.reward;
       revealedCount++;
-      totalEl.textContent = total;
-      countEl.textContent = revealedCount;
-
-      Database.addDig(currentPlayer(), type, reward);
-      refreshAll();
-    });
+      if (cellData.justRevealed) {
+        cell.classList.add("pop");
+        cellData.justRevealed = false;
+      }
+    } else {
+      cell.textContent = ICONS[cellData.type];
+      cell.addEventListener("click", () => {
+        if (Database.turnDigCount(Database.currentTurn(playerRecord())) >= MAX_DIGS_PER_TURN) return;
+        cellData.revealed = true;
+        cellData.justRevealed = true;
+        Database.addDig(playerId, cellData.type, cellData.reward);
+        renderGrid();
+        refreshAll();
+      });
+    }
 
     grid.appendChild(cell);
-  }
-}
+  });
 
-resetBtn.addEventListener("click", buildGrid);
-
-showAllBtn.addEventListener("click", () => {
-  let used = Database.turnDigCount(Database.currentTurn(playerRecord()));
-  const unrevealed = Array.from(document.querySelectorAll(".cell:not(.revealed)"));
-  for (const cell of unrevealed) {
-    if (used >= MAX_DIGS_PER_TURN) break;
-    const type = cell.dataset.type;
-    const reward = Number(cell.dataset.reward);
-    cell.classList.add("revealed", "pop");
-    cell.textContent = reward;
-    total += reward;
-    revealedCount++;
-    Database.addDig(currentPlayer(), type, reward);
-    used++;
-  }
   totalEl.textContent = total;
   countEl.textContent = revealedCount;
+}
+
+resetBtn.addEventListener("click", () => {
+  gridsByPlayer[currentPlayer()] = createGridData();
+  renderGrid();
+});
+
+showAllBtn.addEventListener("click", () => {
+  const playerId = currentPlayer();
+  const cellsData = getGridData(playerId);
+  let used = Database.turnDigCount(Database.currentTurn(playerRecord()));
+
+  for (const cellData of cellsData) {
+    if (used >= MAX_DIGS_PER_TURN) break;
+    if (cellData.revealed) continue;
+    cellData.revealed = true;
+    cellData.justRevealed = true;
+    Database.addDig(playerId, cellData.type, cellData.reward);
+    used++;
+  }
+
+  renderGrid();
   refreshAll();
 });
 
 nextTurnBtn.addEventListener("click", () => {
   Database.startNewTurn(currentPlayer());
-  buildGrid();
+  gridsByPlayer[currentPlayer()] = createGridData();
+  renderGrid();
   refreshAll();
 });
 
 playerSelect.addEventListener("change", () => {
   Database.setCurrentPlayer(currentPlayer());
+  renderGrid();
   refreshAll();
 });
 
@@ -197,5 +227,5 @@ importInput.addEventListener("change", () => {
 });
 
 playerSelect.value = Database.getCurrentPlayer();
-buildGrid();
+renderGrid();
 refreshAll();
