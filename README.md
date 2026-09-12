@@ -31,7 +31,10 @@ picks which of Player One / Two / Three the digging counts toward — each
 player digs their **own independently random, private board**: nobody sees
 what tiles the others have revealed, or is influenced by their layout.
 Switching players restores whatever that player had already dug on their own
-board; it doesn't reshuffle it.
+board; it doesn't reshuffle it. Every fresh visit (or reload) always opens on
+**Player One, Turn 1** — the page used to reopen on whichever player was
+last selected, which meant a returning player capped out on an earlier visit
+could make it look like the whole game only worked for one player.
 
 Digging is turn-based: **each turn caps out at 10 picks** per player. The
 turn bar shows picks used (e.g. "Turn 2 — 6/10 picks used"); once the cap is

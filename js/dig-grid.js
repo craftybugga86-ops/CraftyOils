@@ -325,7 +325,6 @@ nextTurnBtn.addEventListener("click", nextTurn);
 nextTurnBannerBtn.addEventListener("click", nextTurn);
 
 playerSelect.addEventListener("change", () => {
-  Database.setCurrentPlayer(currentPlayer());
   renderGrid();
   refreshAll();
 });
@@ -352,6 +351,8 @@ importInput.addEventListener("change", () => {
   importInput.value = "";
 });
 
-playerSelect.value = Database.getCurrentPlayer();
+// Always start on Player One, Turn 1 — a fresh visit should never silently
+// reopen on whichever player was last selected in an earlier session.
+playerSelect.value = "player1";
 renderGrid();
 refreshAll();

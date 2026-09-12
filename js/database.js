@@ -4,7 +4,6 @@
 // exportable/importable as an actual .json file for portability.
 const Database = (() => {
   const STORAGE_KEY = "craftyoils.db";
-  const CURRENT_PLAYER_KEY = "craftyoils.currentPlayer";
   const EXPORT_FILENAME = "craftyoils-database.json";
 
   const MAX_DIGS_PER_TURN = 10;
@@ -77,15 +76,6 @@ const Database = (() => {
 
   function save(db) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  }
-
-  function getCurrentPlayer() {
-    const stored = localStorage.getItem(CURRENT_PLAYER_KEY);
-    return PLAYERS.includes(stored) ? stored : PLAYERS[0];
-  }
-
-  function setCurrentPlayer(playerId) {
-    localStorage.setItem(CURRENT_PLAYER_KEY, playerId);
   }
 
   function currentTurn(playerRecord) {
@@ -202,7 +192,7 @@ const Database = (() => {
 
   return {
     PLAYERS, PLAYER_LABELS, TYPE_INFO, MAX_DIGS_PER_TURN,
-    load, save, getCurrentPlayer, setCurrentPlayer,
+    load, save,
     currentTurn, turnDigCount, turnTotal, bestTurn,
     addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll,
     aggregate, grandTotal,
