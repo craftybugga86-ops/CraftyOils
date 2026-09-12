@@ -26,48 +26,47 @@ payout multiplier on a 1–9 base roll, and its own rarity:
 | 🛢️ Oil Well | 10× | 10–90 | 1 |
 
 So dirt turns up roughly 5x as often as an oil well, but an oil well pays out
-up to 10x as much — the rarer tile is worth chasing. A "Playing as" dropdown
-picks which of Player One / Two / Three the digging counts toward — each
-player digs their **own independently random, private board**: nobody sees
-what tiles the others have revealed, or is influenced by their layout.
-Switching players restores whatever that player had already dug on their own
-board; it doesn't reshuffle it. Every fresh visit (or reload) always opens on
-**Player One, Turn 1** — the page used to reopen on whichever player was
-last selected, which meant a returning player capped out on an earlier visit
-could make it look like the whole game only worked for one player.
+up to 10x as much — the rarer tile is worth chasing. Each player digs their
+**own independently random, private board**: nobody sees what tiles the
+others have revealed, or is influenced by their layout.
 
-Digging is turn-based: **each turn caps out at 10 picks** per player. The
-turn bar shows picks used (e.g. "Turn 2 — 6/10 picks used"); once the cap is
-hit, remaining tiles dim and stop responding, and **Show All** only reveals
-up to however many picks are left in the turn (never more than 10 total).
+**It's a strict, automatic three-player match**, not free player-switching:
+Player One, Two, and Three each get exactly **one turn of up to 10 picks**,
+in that order. A "Now Playing" indicator shows whose turn it is — there's no
+dropdown, because nobody chooses; control just isn't given to anyone but the
+active player. The instant that player uses their 10th pick (or you use
+**Show All** to fill the rest of their turn at once), it **automatically
+hands off to the next player** — a brief banner announces the pass — with no
+button to click and no way to skip someone or go out of order. **Reset Turn**
+lets the *active* player only redo their own turn from scratch (0/10 picks,
+fresh board); **Reset Grid** just reshuffles their current board without
+touching picks used.
 
-- **Reset Turn** redoes the *current* turn from scratch (0/10 picks, fresh
-  board) without touching earlier turns or the turn number.
-- **Next Turn** starts a brand new turn — a new grid and a reset 10-pick
-  allowance — leaving every earlier turn's results alone.
-- **Reset Grid** just reshuffles the current board without changing picks
-  used or any recorded results.
+Once Player Three's turn ends, **the game is over**: the board and controls
+disappear, replaced by a **Final Results** screen ranking all three players
+by total, highest first, with a **Play Again** button that wipes everyone's
+history and starts a brand new match at Player One.
 
 Reachable from the title screen's Play button, at `dig-grid.html`.
 
-- `dig-grid.html` — page markup, player and turn controls, game container
-- `css/dig-grid.css` — grid, tile, and turn-bar styling
+- `dig-grid.html` — page markup, the active-player display, and game
+  container
+- `css/dig-grid.css` — grid, tile, turn-bar, and final-results styling
 - `js/dig-grid.js` — grid generation (weighted spawn, per-type payout),
-  digging, turn-limit enforcement
+  digging, and the automatic Player One → Two → Three hand-off
 
 ## Collection & Database
 
-Every dig is recorded against the player's *current turn*: a count and
-resource subtotal per type (Dirt, Rock, Oil Well) for that turn alone. The
-**Collection** panel sums every turn played so far into lifetime totals per
-type, plus a grand total — shown as **one card per player, side by side**,
-so all three players' results are visible at once rather than one at a time
-behind a dropdown. Each card has its own **Reset This Player** (clears that
-player's entire turn history, with a confirmation prompt); **Reset Game
-(All Players)** does the same for all three at once, for starting the whole
-game over. **Turn History** lists each turn played by the "Playing as"
-player — picks used and that turn's total — so results can be compared turn
-by turn, not just as one lifetime figure.
+Every dig is recorded against the active player's *current turn*: a count
+and resource subtotal per type (Dirt, Rock, Oil Well). The **Collection**
+panel sums that into a grand total per player — shown as **one card per
+player, side by side**, so all three are visible at once regardless of
+whose turn it currently is. Each card has its own **Reset This Player**
+(clears that player's history, with a confirmation prompt); **Reset Game
+(All Players)** does the same for all three at once and restarts the match
+at Player One (the same action as **Play Again** on the Final Results
+screen). **Turn History** lists the active player's turn(s) — picks used and
+that turn's total.
 
 Records live in a flat-file JSON database — one object keyed by player, each
 holding an ordered array of turn records — persisted to `localStorage`, and
@@ -95,25 +94,23 @@ them.
 ## Biggest Gusher
 
 A per-turn high score, themed to the drilling setting rather than a generic
-"high score": each player's best single turn total is tracked and shown as
-a **🛢️ Biggest Gusher** badge — the total and which turn hit it (e.g.
-"Biggest Gusher: 512 (Turn 3)"). It sits next to the Dig Grid's stats for
-whoever is "Playing as", and appears inside each player's own card in the
-title screen's Collection modal. The Dig Grid badge gives a brief "blowout"
-pulse the moment a turn actually beats that player's previous record.
+"high score": the active player's best single turn total is tracked and
+shown as a **🛢️ Biggest Gusher** badge — the total and which turn hit it
+(e.g. "Biggest Gusher: 512 (Turn 1)"). It sits next to the Dig Grid's stats,
+and appears inside each player's own card in the title screen's Collection
+modal. The Dig Grid badge gives a brief "blowout" pulse the moment a turn
+actually beats that player's previous record.
 
-Tiles stopping for one player while the others are still free to dig is
-expected — each player's 10-pick cap is independent — but it used to be easy
-to mistake for the game being broken, since the only sign was a small line
-of text. Two banners now make each case obvious:
+## Notes on past bugs
 
-- The moment the *currently selected* player hits 10/10, a banner names
-  them directly ("Player One has used all 10 picks this turn.") with a
-  real, gold **Next Turn** button right in it.
-- The moment *all three* players are capped, a second banner replaces it
-  with **Reset Game (All Players)** — for starting the whole game over.
-
-(An earlier version of the all-players banner had a CSS bug that let it
-show even when not all players were capped, since its own `display: flex`
-rule silently overrode the browser's default for a hidden element — fixed
-by scoping that override to `.all-capped-banner[hidden]`.)
+Two CSS/behavior bugs surfaced and were fixed while building this: an early
+version of a status banner set `display: flex` directly on its class, at the
+same specificity as the browser's default `[hidden] { display: none }`,
+which meant it could show regardless of its `hidden` property — fixed by
+adding a permanent, page-wide `[hidden] { display: none !important; }` rule
+in both stylesheets, so no future component style can make that mistake
+again. Separately, the page used to persist and reopen on whichever player
+was last selected, which (combined with independent per-player turn caps)
+made a returning, already-capped player look like the whole game was
+broken — moot now that there's no manual player selection at all, only the
+automatic one-turn-each match described above.

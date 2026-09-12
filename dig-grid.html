@@ -12,34 +12,23 @@
 <a class="back-link" href="index.html">← Menu</a>
 
 <h1>⛏️ Dig Grid</h1>
-<div class="sub">Click a tile to dig: 🟫 dirt pays 1–9, 🪨 rock pays 3–27, 🛢️ an oil well pays 10–90 — and turns up rarest, in a 5:3:1 dirt:rock:oil spawn ratio. Each player digs their own private grid.</div>
+<div class="sub">Click a tile to dig: 🟫 dirt pays 1–9, 🪨 rock pays 3–27, 🛢️ an oil well pays 10–90 — and turns up rarest, in a 5:3:1 dirt:rock:oil spawn ratio. Player One, Two, and Three each get one turn, in order — once a player uses all 10 picks, it automatically passes to the next.</div>
 
-<label class="player-select">
-  Playing as
-  <select id="playerSelect">
-    <option value="player1">Player One</option>
-    <option value="player2">Player Two</option>
-    <option value="player3">Player Three</option>
-  </select>
-</label>
+<div class="now-playing" id="nowPlayingBox">
+  <span class="sub">Now Playing</span>
+  <span id="activePlayerLabel">Player One</span>
+</div>
 
 <div class="turn-bar">
   <span id="turnInfo">Turn 1 — 0/10 picks used</span>
   <button id="resetTurnBtn" class="text-btn">Reset Turn</button>
-  <button id="nextTurnBtn" class="text-btn">Next Turn</button>
 </div>
 
-<div class="player-capped-banner" id="playerCappedBanner" hidden>
-  <span id="playerCappedText"></span>
-  <button id="nextTurnBannerBtn" class="btn-primary">Next Turn</button>
+<div class="pass-banner" id="passBanner" hidden>
+  <span id="passText"></span>
 </div>
 
-<div class="all-capped-banner" id="allCappedBanner" hidden>
-  <span>All three players have used their picks. Start fresh for everyone:</span>
-  <button id="allCappedResetBtn" class="btn-danger">Reset Game (All Players)</button>
-</div>
-
-<div class="stats">
+<div class="stats" id="statsBox">
   <div>Total: <span id="total">0</span></div>
   <div>Revealed: <span id="count">0</span>/81</div>
 </div>
@@ -51,9 +40,16 @@
 
 <div class="grid" id="grid"></div>
 
-<div class="controls">
+<div class="controls" id="controls">
   <button id="resetBtn">Reset Grid</button>
   <button id="showAllBtn">Show All</button>
+</div>
+
+<div class="game-over" id="gameOverPanel" hidden>
+  <h2>🏁 Game Over</h2>
+  <p class="sub">Every player has taken their turn. Final results:</p>
+  <ul class="final-results" id="finalResultsList"></ul>
+  <button id="playAgainBtn" class="btn-primary">Play Again</button>
 </div>
 
 <div class="collection collection-wide">

@@ -20,25 +20,28 @@ const SPAWN_TOTAL_WEIGHT = SPAWN_WEIGHTS.reduce((sum, w) => sum + w.weight, 0);
 const MAX_DIGS_PER_TURN = Database.MAX_DIGS_PER_TURN;
 
 const grid = document.getElementById("grid");
+const controlsEl = document.getElementById("controls");
+const statsBox = document.getElementById("statsBox");
 const totalEl = document.getElementById("total");
 const countEl = document.getElementById("count");
 const resetBtn = document.getElementById("resetBtn");
 const showAllBtn = document.getElementById("showAllBtn");
-const playerSelect = document.getElementById("playerSelect");
+const nowPlayingBox = document.getElementById("nowPlayingBox");
+const activePlayerLabelEl = document.getElementById("activePlayerLabel");
+const turnBarEl = document.querySelector(".turn-bar");
 const turnInfoEl = document.getElementById("turnInfo");
 const resetTurnBtn = document.getElementById("resetTurnBtn");
-const nextTurnBtn = document.getElementById("nextTurnBtn");
+const passBanner = document.getElementById("passBanner");
+const passText = document.getElementById("passText");
 const collectionPlayersEl = document.getElementById("collectionPlayers");
 const turnHistoryList = document.getElementById("turnHistoryList");
 const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const importInput = document.getElementById("importInput");
 const resetGameBtn = document.getElementById("resetGameBtn");
-const allCappedBanner = document.getElementById("allCappedBanner");
-const allCappedResetBtn = document.getElementById("allCappedResetBtn");
-const playerCappedBanner = document.getElementById("playerCappedBanner");
-const playerCappedText = document.getElementById("playerCappedText");
-const nextTurnBannerBtn = document.getElementById("nextTurnBannerBtn");
+const gameOverPanel = document.getElementById("gameOverPanel");
+const finalResultsList = document.getElementById("finalResultsList");
+const playAgainBtn = document.getElementById("playAgainBtn");
 const gusherBadge = document.getElementById("gusherBadge");
 const gusherTotalEl = document.getElementById("gusherTotal");
 const gusherTurnEl = document.getElementById("gusherTurn");
@@ -51,6 +54,8 @@ const lastGusherByPlayer = {};
 // layout nobody else can see or is influenced by. Keyed by player id, kept
 // only in memory for this session (a reload starts everyone over).
 const gridsByPlayer = {};
+
+let passBannerTimer = null;
 
 // Cryptographically strong random integer in [min, max], with
 // rejection sampling to avoid modulo bias — gives a much more
@@ -99,12 +104,21 @@ function getGridData(playerId) {
   return gridsByPlayer[playerId];
 }
 
-function currentPlayer() {
-  return playerSelect.value;
+// Whose turn it is right now — Player One, Two, and Three go in strict
+// order, one turn each; nobody picks who's playing, it's automatic.
+function activePlayerId() {
+  return Database.activePlayer(Database.load());
 }
 
 function playerRecord() {
-  return Database.load()[currentPlayer()];
+  return Database.load()[activePlayerId()];
+}
+
+function showPassBanner(message) {
+  passText.textContent = message;
+  passBanner.hidden = false;
+  clearTimeout(passBannerTimer);
+  passBannerTimer = setTimeout(() => { passBanner.hidden = true; }, 3500);
 }
 
 // Refreshes the turn indicator and locks digging once the turn's cap is hit.
@@ -113,16 +127,14 @@ function updateTurnInfo() {
   const turn = Database.currentTurn(record);
   const used = Database.turnDigCount(turn);
   const limitReached = used >= MAX_DIGS_PER_TURN;
-  turnInfoEl.textContent = limitReached
-    ? `Turn ${turn.turnNumber} — limit reached (${used}/${MAX_DIGS_PER_TURN}). Start Next Turn to keep digging.`
-    : `Turn ${turn.turnNumber} — ${used}/${MAX_DIGS_PER_TURN} picks used`;
+  turnInfoEl.textContent = `Turn ${turn.turnNumber} — ${used}/${MAX_DIGS_PER_TURN} picks used`;
   grid.classList.toggle("limit-reached", limitReached);
   showAllBtn.disabled = limitReached;
-  return used;
+  activePlayerLabelEl.textContent = Database.PLAYER_LABELS[activePlayerId()];
 }
 
 // Shows every player's lifetime totals side by side, instead of only
-// whoever the "Playing as" dropdown happens to have selected.
+// whoever happens to be playing right now.
 function renderCollection() {
   const db = Database.load();
   collectionPlayersEl.innerHTML = "";
@@ -158,7 +170,7 @@ function renderCollection() {
       const id = btn.dataset.resetPlayer;
       if (!confirm(`Clear ${Database.PLAYER_LABELS[id]}'s entire history? This can't be undone.`)) return;
       Database.resetPlayer(id);
-      if (id === currentPlayer()) {
+      if (id === activePlayerId()) {
         gridsByPlayer[id] = createGridData();
         renderGrid();
       }
@@ -184,7 +196,7 @@ function renderTurnHistory() {
 // The player's best single turn so far — their "biggest gusher" — with a
 // brief celebration the moment a turn actually beats their old record.
 function renderGusher() {
-  const playerId = currentPlayer();
+  const playerId = activePlayerId();
   const best = Database.bestTurn(playerRecord());
 
   gusherTotalEl.textContent = best.total;
@@ -199,43 +211,59 @@ function renderGusher() {
   lastGusherByPlayer[playerId] = best.total;
 }
 
-// Surfaces the fix (Reset Game) right up top the moment every player is
-// stuck at their pick cap, instead of leaving it to be found by scrolling.
-// Returns whether all three are capped, so the per-player banner below can
-// stay quiet rather than pile a second banner on top of this one.
-function updateAllCappedBanner() {
+// Shows the in-progress board when the match is live, or the final results
+// once every player has had their turn.
+function applyMatchVisibility() {
+  const over = Database.isMatchOver(Database.load());
+  nowPlayingBox.hidden = over;
+  turnBarEl.hidden = over;
+  statsBox.hidden = over;
+  gusherBadge.hidden = over;
+  grid.hidden = over;
+  controlsEl.hidden = over;
+  gameOverPanel.hidden = !over;
+  if (over) renderGameOver();
+}
+
+function renderGameOver() {
   const db = Database.load();
-  const allCapped = Database.PLAYERS.every(
-    id => Database.turnDigCount(Database.currentTurn(db[id])) >= MAX_DIGS_PER_TURN
-  );
-  allCappedBanner.hidden = !allCapped;
-  return allCapped;
+  const results = Database.PLAYERS
+    .map(id => ({ id, label: Database.PLAYER_LABELS[id], total: Database.grandTotal(db[id]) }))
+    .sort((a, b) => b.total - a.total);
+
+  finalResultsList.innerHTML = "";
+  results.forEach((r, i) => {
+    const li = document.createElement("li");
+    if (i === 0) li.classList.add("winner");
+    li.innerHTML =
+      `<span class="rank">#${i + 1}</span>` +
+      `<span class="final-name">${r.label}</span>` +
+      `<span class="final-total">${r.total}</span>`;
+    finalResultsList.appendChild(li);
+  });
 }
 
-// Puts a real, unmissable "Next Turn" button front and center the instant
-// the *current* player is capped — not everyone, just them — since digging
-// stopping for one player while others still can is expected, not broken.
-function updatePlayerCappedBanner(allCapped) {
+// If the active player has just used their last pick, hand control to the
+// next player in order; once Player Three finishes, the match ends. Calls
+// refreshAll() again after advancing so every panel reflects the new state
+// (bounded recursion — at most two more players to advance through).
+function maybeAdvanceMatch() {
+  if (Database.isMatchOver(Database.load())) return;
+
+  const playerId = activePlayerId();
   const used = Database.turnDigCount(Database.currentTurn(playerRecord()));
-  const capped = used >= MAX_DIGS_PER_TURN;
-  playerCappedBanner.hidden = allCapped || !capped;
-  if (capped) {
-    playerCappedText.textContent = `${Database.PLAYER_LABELS[currentPlayer()]} has used all ${MAX_DIGS_PER_TURN} picks this turn.`;
+  if (used < MAX_DIGS_PER_TURN) return;
+
+  const finishedLabel = Database.PLAYER_LABELS[playerId];
+  Database.advanceMatch();
+
+  if (Database.isMatchOver(Database.load())) {
+    showPassBanner(`${finishedLabel}'s turn is over. Game over!`);
+  } else {
+    const nextLabel = Database.PLAYER_LABELS[activePlayerId()];
+    showPassBanner(`${finishedLabel}'s turn is over — now playing ${nextLabel}.`);
+    renderGrid();
   }
-}
-
-function resetGame() {
-  if (!confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) return;
-  Database.resetAll();
-  Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
-  renderGrid();
-  refreshAll();
-}
-
-function nextTurn() {
-  Database.startNewTurn(currentPlayer());
-  gridsByPlayer[currentPlayer()] = createGridData();
-  renderGrid();
   refreshAll();
 }
 
@@ -244,14 +272,14 @@ function refreshAll() {
   renderCollection();
   renderTurnHistory();
   renderGusher();
-  const allCapped = updateAllCappedBanner();
-  updatePlayerCappedBanner(allCapped);
+  applyMatchVisibility();
+  maybeAdvanceMatch();
 }
 
-// Renders the current player's own board from its stored cell data,
+// Renders the active player's own board from its stored cell data,
 // restoring whatever they'd already revealed rather than reshuffling it.
 function renderGrid() {
-  const playerId = currentPlayer();
+  const playerId = activePlayerId();
   const cellsData = getGridData(playerId);
 
   grid.innerHTML = "";
@@ -291,12 +319,12 @@ function renderGrid() {
 }
 
 resetBtn.addEventListener("click", () => {
-  gridsByPlayer[currentPlayer()] = createGridData();
+  gridsByPlayer[activePlayerId()] = createGridData();
   renderGrid();
 });
 
 showAllBtn.addEventListener("click", () => {
-  const playerId = currentPlayer();
+  const playerId = activePlayerId();
   const cellsData = getGridData(playerId);
   let used = Database.turnDigCount(Database.currentTurn(playerRecord()));
 
@@ -314,23 +342,25 @@ showAllBtn.addEventListener("click", () => {
 });
 
 resetTurnBtn.addEventListener("click", () => {
-  if (!confirm(`Redo Turn ${Database.currentTurn(playerRecord()).turnNumber} for ${Database.PLAYER_LABELS[currentPlayer()]} from scratch (0/${MAX_DIGS_PER_TURN} picks)?`)) return;
-  Database.resetCurrentTurn(currentPlayer());
-  gridsByPlayer[currentPlayer()] = createGridData();
+  const playerId = activePlayerId();
+  if (!confirm(`Redo Turn ${Database.currentTurn(playerRecord()).turnNumber} for ${Database.PLAYER_LABELS[playerId]} from scratch (0/${MAX_DIGS_PER_TURN} picks)?`)) return;
+  Database.resetCurrentTurn(playerId);
+  gridsByPlayer[playerId] = createGridData();
   renderGrid();
   refreshAll();
 });
 
-nextTurnBtn.addEventListener("click", nextTurn);
-nextTurnBannerBtn.addEventListener("click", nextTurn);
-
-playerSelect.addEventListener("change", () => {
+function resetGame() {
+  if (!confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) return;
+  Database.resetAll();
+  Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
+  passBanner.hidden = true;
   renderGrid();
   refreshAll();
-});
+}
 
 resetGameBtn.addEventListener("click", resetGame);
-allCappedResetBtn.addEventListener("click", resetGame);
+playAgainBtn.addEventListener("click", resetGame);
 
 exportBtn.addEventListener("click", () => {
   Database.exportFile();
@@ -345,14 +375,19 @@ importInput.addEventListener("change", () => {
   if (!file) return;
   Database.importFile(
     file,
-    () => refreshAll(),
+    () => {
+      if (!Database.isMatchOver(Database.load())) {
+        gridsByPlayer[activePlayerId()] = createGridData();
+        renderGrid();
+      }
+      refreshAll();
+    },
     () => alert("Couldn't read that file — make sure it's a Crafty Oils database export.")
   );
   importInput.value = "";
 });
 
-// Always start on Player One, Turn 1 — a fresh visit should never silently
-// reopen on whichever player was last selected in an earlier session.
-playerSelect.value = "player1";
-renderGrid();
+if (!Database.isMatchOver(Database.load())) {
+  renderGrid();
+}
 refreshAll();

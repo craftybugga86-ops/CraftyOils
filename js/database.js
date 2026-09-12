@@ -10,7 +10,7 @@ const Database = (() => {
   // (a new commit changes it automatically — see ensureFreshBuild below).
   // Collection/turn data never survives past a build it wasn't saved under,
   // so a code deployment can never inherit a previous deployment's state.
-  const BUILD_ID = "2026-09-12T01";
+  const BUILD_ID = "2026-09-12T02";
   const BUILD_KEY = "craftyoils.buildId";
 
   // Wipes any saved game data the instant it's from a different build than
@@ -58,10 +58,24 @@ const Database = (() => {
     return { turns: [emptyTurn(1)] };
   }
 
+  // Whose turn it is right now, in strict Player One -> Two -> Three order,
+  // and whether the match has finished (every player has had their turn).
+  function emptyMatch() {
+    return { activeIndex: 0, over: false };
+  }
+
   function emptyDb() {
-    const db = {};
+    const db = { __match__: emptyMatch() };
     PLAYERS.forEach(id => { db[id] = emptyPlayerRecord(); });
     return db;
+  }
+
+  function sanitizeMatch(raw) {
+    const idx = Number(raw && raw.activeIndex);
+    return {
+      activeIndex: Number.isInteger(idx) && idx >= 0 && idx < PLAYERS.length ? idx : 0,
+      over: !!(raw && raw.over),
+    };
   }
 
   // Rebuild a raw (possibly untrusted/imported) player record into a clean
@@ -94,6 +108,7 @@ const Database = (() => {
         PLAYERS.forEach(id => {
           if (stored[id]) db[id] = sanitizePlayerRecord(stored[id]);
         });
+        db.__match__ = sanitizeMatch(stored.__match__);
       }
     } catch {
       // ignore corrupt storage, fall back to empty db
@@ -124,6 +139,29 @@ const Database = (() => {
       const total = turnTotal(turn);
       return total > best.total ? { turnNumber: turn.turnNumber, total } : best;
     }, { turnNumber: null, total: 0 });
+  }
+
+  // Whose turn it is, in Player One -> Two -> Three order.
+  function activePlayer(db) {
+    return PLAYERS[db.__match__.activeIndex];
+  }
+
+  function isMatchOver(db) {
+    return db.__match__.over;
+  }
+
+  // Hands control to the next player once the active player's turn is
+  // done; once Player Three's turn ends, the match is over for everyone.
+  function advanceMatch() {
+    const db = load();
+    const nextIndex = db.__match__.activeIndex + 1;
+    if (nextIndex >= PLAYERS.length) {
+      db.__match__.over = true;
+    } else {
+      db.__match__.activeIndex = nextIndex;
+    }
+    save(db);
+    return db;
   }
 
   // Records one dig against the player's current turn. No-ops (returns
@@ -208,6 +246,7 @@ const Database = (() => {
         PLAYERS.forEach(id => {
           if (parsed[id]) db[id] = sanitizePlayerRecord(parsed[id]);
         });
+        if (parsed.__match__) db.__match__ = sanitizeMatch(parsed.__match__);
         save(db);
         if (onComplete) onComplete(db);
       } catch (err) {
@@ -221,6 +260,7 @@ const Database = (() => {
     PLAYERS, PLAYER_LABELS, TYPE_INFO, MAX_DIGS_PER_TURN,
     load, save,
     currentTurn, turnDigCount, turnTotal, bestTurn,
+    activePlayer, isMatchOver, advanceMatch,
     addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll,
     aggregate, grandTotal,
     exportFile, importFile,
