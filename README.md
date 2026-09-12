@@ -15,11 +15,21 @@ game elements are added, they'll get their own menu buttons here.
 
 ## Dig Grid
 
-A drilling mini-game mechanic: a 9x9 grid of hidden tiles (dirt, rock, or oil well).
-Clicking a tile digs it, revealing a reward value from 0–89. A "Playing as"
-dropdown picks which of Player One / Two / Three the digging counts toward —
-each player digs their **own independently random, private board**: nobody
-sees what tiles the others have revealed, or is influenced by their layout.
+A drilling mini-game mechanic: a 9x9 grid of hidden tiles (dirt, rock, or oil
+well). Clicking a tile digs it, revealing a reward. Each type has its own
+payout multiplier on a 1–9 base roll, and its own rarity:
+
+| Tile | Multiplier | Payout | Spawn ratio |
+| --- | --- | --- | --- |
+| 🟫 Dirt | 1× | 1–9 | 5 |
+| 🪨 Rock | 3× | 3–27 | 3 |
+| 🛢️ Oil Well | 10× | 10–90 | 1 |
+
+So dirt turns up roughly 5x as often as an oil well, but an oil well pays out
+up to 10x as much — the rarer tile is worth chasing. A "Playing as" dropdown
+picks which of Player One / Two / Three the digging counts toward — each
+player digs their **own independently random, private board**: nobody sees
+what tiles the others have revealed, or is influenced by their layout.
 Switching players restores whatever that player had already dug on their own
 board; it doesn't reshuffle it.
 
@@ -39,7 +49,8 @@ Reachable from the title screen's Play button, at `dig-grid.html`.
 
 - `dig-grid.html` — page markup, player and turn controls, game container
 - `css/dig-grid.css` — grid, tile, and turn-bar styling
-- `js/dig-grid.js` — grid generation, digging, turn-limit enforcement
+- `js/dig-grid.js` — grid generation (weighted spawn, per-type payout),
+  digging, turn-limit enforcement
 
 ## Collection & Database
 

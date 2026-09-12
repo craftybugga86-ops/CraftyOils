@@ -3,8 +3,20 @@ const ICONS = {
   rock: "🪨",
   oilwell: "🛢️"
 };
-const TYPES = Object.keys(ICONS);
 const GRID_SIZE = 9;
+
+// Reward multiplier per tile type: dirt is common and low-value, an oil
+// well is rare and pays out big.
+const MULTIPLIERS = { dirt: 1, rock: 3, oilwell: 10 };
+
+// How often each type spawns, as parts of a whole — dirt : rock : oilwell
+// = 5 : 3 : 1, so dirt turns up roughly 5x as often as an oil well.
+const SPAWN_WEIGHTS = [
+  { type: "dirt", weight: 5 },
+  { type: "rock", weight: 3 },
+  { type: "oilwell", weight: 1 },
+];
+const SPAWN_TOTAL_WEIGHT = SPAWN_WEIGHTS.reduce((sum, w) => sum + w.weight, 0);
 const MAX_DIGS_PER_TURN = Database.MAX_DIGS_PER_TURN;
 
 const grid = document.getElementById("grid");
@@ -56,13 +68,24 @@ function randInt(min, max) {
   return min + (x % range);
 }
 
+// Weighted pick honoring SPAWN_WEIGHTS (dirt:rock:oilwell = 5:3:1).
+function pickType() {
+  let roll = randInt(1, SPAWN_TOTAL_WEIGHT);
+  for (const { type, weight } of SPAWN_WEIGHTS) {
+    if (roll <= weight) return type;
+    roll -= weight;
+  }
+  return SPAWN_WEIGHTS[SPAWN_WEIGHTS.length - 1].type; // unreachable safety net
+}
+
 function createGridData() {
   const cells = [];
   const cellCount = GRID_SIZE * GRID_SIZE;
   for (let i = 0; i < cellCount; i++) {
+    const type = pickType();
     cells.push({
-      type: TYPES[randInt(0, TYPES.length - 1)],
-      reward: randInt(0, 89),
+      type,
+      reward: randInt(1, 9) * MULTIPLIERS[type],
       revealed: false,
     });
   }
