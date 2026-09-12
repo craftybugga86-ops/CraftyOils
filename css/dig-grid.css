@@ -42,6 +42,25 @@ h1 {
   width: 100%;
   max-width: 460px;
 }
+.pregame {
+  width: 100%;
+  max-width: 460px;
+  background: #14171b;
+  border-radius: 10px;
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.pregame h2 {
+  margin: 0 0 6px;
+  color: var(--gold);
+  font-size: 1.2rem;
+}
+.pregame .sub { margin-bottom: 16px; }
+.pregame .games-select {
+  justify-content: center;
+  margin-bottom: 0;
+}
 .games-select {
   display: flex;
   align-items: center;

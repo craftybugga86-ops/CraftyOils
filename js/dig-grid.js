@@ -27,6 +27,7 @@ const countEl = document.getElementById("count");
 const resetBtn = document.getElementById("resetBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 const gamesButtons = document.querySelectorAll(".games-btn");
+const pregamePanel = document.getElementById("pregamePanel");
 const nowPlayingBox = document.getElementById("nowPlayingBox");
 const activePlayerLabelEl = document.getElementById("activePlayerLabel");
 const roundLabelEl = document.getElementById("roundLabel");
@@ -227,18 +228,23 @@ function renderGusher() {
   lastGusherByPlayer[playerId] = best.total;
 }
 
-// Shows the in-progress board when the match is live, or the final results
-// once every player has had their turn.
+// Three states: nothing chosen yet (pre-game setup), a live match in
+// progress, or every game finished (final results).
 function applyMatchVisibility() {
-  const over = Database.isMatchOver(Database.load());
-  nowPlayingBox.hidden = over;
-  turnBarEl.hidden = over;
-  statsBox.hidden = over;
-  gusherBadge.hidden = over;
-  grid.hidden = over;
-  controlsEl.hidden = over;
-  gameOverPanel.hidden = !over;
-  if (over) renderGameOver();
+  const db = Database.load();
+  const started = Database.isMatchStarted(db);
+  const over = Database.isMatchOver(db);
+  const inProgress = started && !over;
+
+  pregamePanel.hidden = started;
+  nowPlayingBox.hidden = !inProgress;
+  turnBarEl.hidden = !inProgress;
+  statsBox.hidden = !inProgress;
+  gusherBadge.hidden = !inProgress;
+  grid.hidden = !inProgress;
+  controlsEl.hidden = !inProgress;
+  gameOverPanel.hidden = !(started && over);
+  if (started && over) renderGameOver();
 }
 
 function renderGameOver() {
@@ -378,7 +384,10 @@ resetTurnBtn.addEventListener("click", () => {
   refreshAll();
 });
 
-function resetGame(totalGames) {
+// Wipes everything and drops back to the pre-game setup step, so the next
+// match always starts with an explicit "Best of" choice rather than
+// silently resuming the old length.
+function resetGame() {
   const db = Database.load();
   const hasProgress = Database.PLAYERS.some(id =>
     db[id].turns.some(turn => Database.turnDigCount(turn) > 0)
@@ -386,19 +395,24 @@ function resetGame(totalGames) {
   if (hasProgress && !confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) {
     return;
   }
-  Database.resetAll(totalGames);
+  Database.resetAll();
   Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
   passBanner.hidden = true;
-  renderGrid();
   refreshAll();
 }
 
-resetGameBtn.addEventListener("click", () => resetGame());
-playAgainBtn.addEventListener("click", () => resetGame());
+resetGameBtn.addEventListener("click", resetGame);
+playAgainBtn.addEventListener("click", resetGame);
 
+// The only thing that actually begins play — picking a length here is what
+// makes the board and controls appear.
 gamesButtons.forEach(btn => {
   btn.addEventListener("click", () => {
-    resetGame(Number(btn.dataset.games));
+    Database.startNewMatch(Number(btn.dataset.games));
+    Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
+    passBanner.hidden = true;
+    renderGrid();
+    refreshAll();
   });
 });
 
@@ -416,7 +430,8 @@ importInput.addEventListener("change", () => {
   Database.importFile(
     file,
     () => {
-      if (!Database.isMatchOver(Database.load())) {
+      const db = Database.load();
+      if (Database.isMatchStarted(db) && !Database.isMatchOver(db)) {
         gridsByPlayer[activePlayerId()] = createGridData();
         renderGrid();
       }
@@ -427,7 +442,8 @@ importInput.addEventListener("change", () => {
   importInput.value = "";
 });
 
-if (!Database.isMatchOver(Database.load())) {
+const initialDb = Database.load();
+if (Database.isMatchStarted(initialDb) && !Database.isMatchOver(initialDb)) {
   renderGrid();
 }
 refreshAll();

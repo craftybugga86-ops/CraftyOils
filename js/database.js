@@ -10,7 +10,7 @@ const Database = (() => {
   // (a new commit changes it automatically — see ensureFreshBuild below).
   // Collection/turn data never survives past a build it wasn't saved under,
   // so a code deployment can never inherit a previous deployment's state.
-  const BUILD_ID = "2026-09-12T03";
+  const BUILD_ID = "2026-09-12T04";
   const BUILD_KEY = "craftyoils.buildId";
 
   // Wipes any saved game data the instant it's from a different build than
@@ -60,13 +60,15 @@ const Database = (() => {
   }
 
   // Whose turn it is right now (Player One -> Two -> Three, repeating for
-  // `totalGames` rounds), which round that is, and whether every round has
+  // `totalGames` rounds), which round that is, whether a match length has
+  // actually been chosen and started yet, and whether every round has
   // finished for every player.
   function emptyMatch(totalGames) {
     return {
       activeIndex: 0,
       round: 1,
       totalGames: VALID_GAME_COUNTS.includes(totalGames) ? totalGames : 1,
+      started: false,
       over: false,
     };
   }
@@ -85,6 +87,7 @@ const Database = (() => {
       activeIndex: Number.isInteger(idx) && idx >= 0 && idx < PLAYERS.length ? idx : 0,
       round: Number.isInteger(round) && round >= 1 ? round : 1,
       totalGames: VALID_GAME_COUNTS.includes(totalGames) ? totalGames : 1,
+      started: !!(raw && raw.started),
       over: !!(raw && raw.over),
     };
   }
@@ -161,6 +164,12 @@ const Database = (() => {
     return db.__match__.over;
   }
 
+  // Whether a match length has actually been chosen and begun — before
+  // this, there's nothing to dig; the player still needs to pick 1, 3, or 5.
+  function isMatchStarted(db) {
+    return db.__match__.started;
+  }
+
   // Hands control to the next player once the active player's turn is
   // done. After Player Three finishes a round, either the next round starts
   // (back to Player One) or, once totalGames rounds are complete, the match
@@ -228,11 +237,22 @@ const Database = (() => {
     return db;
   }
 
-  // Starts a completely new match. Pass 1, 3, or 5 to pick how many rounds
-  // it runs; omit it to keep whatever was selected last.
+  // Wipes everything and returns to the pre-game setup step (started:
+  // false) — nothing to dig until a match length is chosen again via
+  // startNewMatch(). Keeps whatever length was last selected as the
+  // pre-highlighted default, unless a new one is given.
   function resetAll(totalGames) {
     const previous = load().__match__.totalGames;
     const db = emptyDb(totalGames || previous);
+    save(db);
+    return db;
+  }
+
+  // Actually begins play at the given length (1, 3, or 5 games) — this is
+  // the only thing that ever makes the board and controls appear.
+  function startNewMatch(totalGames) {
+    const db = emptyDb(totalGames);
+    db.__match__.started = true;
     save(db);
     return db;
   }
@@ -289,8 +309,8 @@ const Database = (() => {
     PLAYERS, PLAYER_LABELS, TYPE_INFO, MAX_DIGS_PER_TURN,
     load, save,
     currentTurn, turnDigCount, turnTotal, bestTurn,
-    activePlayer, isMatchOver, advanceMatch,
-    addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll,
+    activePlayer, isMatchOver, isMatchStarted, advanceMatch,
+    addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll, startNewMatch,
     aggregate, grandTotal,
     exportFile, importFile,
   };

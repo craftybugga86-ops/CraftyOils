@@ -30,31 +30,33 @@ up to 10x as much — the rarer tile is worth chasing. Each player digs their
 **own independently random, private board**: nobody sees what tiles the
 others have revealed, or is influenced by their layout.
 
-**It's a strict, automatic three-player match**, not free player-switching:
-Player One, Two, and Three each get exactly **one turn of up to 10 picks per
-game**, in that order. A **"Best of 1, 3, or 5"** selector picks how many
-games the match runs — one full Player One → Two → Three cycle is one game,
-and it repeats for however many games were chosen, tallying every player's
-score across all of them. A "Now Playing" indicator shows whose turn it is
-and which game the match is on (e.g. "Game 2 of 3") — there's no dropdown,
-because nobody chooses; control just isn't given to anyone but the active
-player. The instant that player uses their 10th pick (or you use **Show
-All** to fill the rest of their turn at once), it **automatically hands off
-to the next player** — a brief banner announces the pass, and names the new
-game number when one starts — with no button to click and no way to skip
-someone or go out of order. Picking a "Best of" value while a match already
-has progress asks for confirmation first, since it starts a brand new match;
-picking it before anything's been played just applies immediately.
-**Reset Turn** lets the *active* player only redo their own turn from
-scratch (0/10 picks, fresh board); **Reset Grid** just reshuffles their
-current board without touching picks used.
+**It's a strict, automatic three-player match**, not free player-switching,
+and **no tile is ever shown until a match length is chosen**. Landing on the
+page (or resetting) shows a "Choose Your Match" setup step — just a **"Best
+of 1, 3, or 5"** button group, no board, no stats, nothing else — and
+picking one is what actually starts play: only then does the grid, turn
+info, and everything else appear. One full Player One → Two → Three cycle is
+one game, repeated for however many games were chosen, tallying every
+player's score across all of them.
+
+Once started, a "Now Playing" indicator shows whose turn it is and which
+game the match is on (e.g. "Game 2 of 3") — there's no dropdown, because
+nobody chooses; control just isn't given to anyone but the active player.
+The instant that player uses their 10th pick (or you use **Show All** to
+fill the rest of their turn at once), it **automatically hands off to the
+next player** — a brief banner announces the pass, and names the new game
+number when one starts — with no button to click and no way to skip someone
+or go out of order. **Reset Turn** lets the *active* player only redo their
+own turn from scratch (0/10 picks, fresh board); **Reset Grid** just
+reshuffles their current board without touching picks used.
 
 Once Player Three's turn ends in the final game, **the match is over**: the
 board and controls disappear, replaced by a **Final Results** screen ranking
 all three players by their *combined* total across every game played,
-highest first, with a **Play Again** button that wipes everyone's history
-and starts a brand new match (same "Best of" length, unless you pick a
-different one) at Player One, Game 1.
+highest first. Its **Play Again** button — like **Reset Game (All
+Players)** in the Collection panel — wipes everyone's history and drops back
+to the "Choose Your Match" setup step (the last-picked length stays
+pre-highlighted, but nothing plays again until it's confirmed).
 
 Reachable from the title screen's Play button, at `dig-grid.html`.
 
