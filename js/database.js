@@ -3,7 +3,10 @@
 // to localStorage as a single blob for the browser session, and
 // exportable/importable as an actual .json file for portability.
 const Database = (() => {
-  const STORAGE_KEY = "craftyoils.db";
+  // Bumping this key forces every visitor to start clean: any data saved
+  // under an older key is simply never read again, which is exactly what a
+  // hard reset needs — no leftover turn/pick state can survive it.
+  const STORAGE_KEY = "craftyoils.db.v2";
   const EXPORT_FILENAME = "craftyoils-database.json";
 
   const MAX_DIGS_PER_TURN = 10;

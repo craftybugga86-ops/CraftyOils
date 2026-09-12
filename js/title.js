@@ -1,4 +1,4 @@
-const SOUND_KEY = "craftyoils.soundEnabled";
+const SOUND_KEY = "craftyoils.soundEnabled.v2";
 
 const modals = {
   collectionBtn: document.getElementById("collectionModal"),

@@ -70,10 +70,17 @@ player — picks used and that turn's total — so results can be compared turn
 by turn, not just as one lifetime figure.
 
 Records live in a flat-file JSON database — one object keyed by player, each
-holding an ordered array of turn records — persisted to `localStorage` for
-the browser session, and portable via **Export Database** / **Import
+holding an ordered array of turn records — persisted to `localStorage` under
+the key `craftyoils.db.v2`, and portable via **Export Database** / **Import
 Database** on the Dig Grid page, which write and read that same JSON
 structure as an actual `.json` file.
+
+That key is versioned on purpose: bumping it (as of this reset) makes every
+visitor start completely clean, since nothing reads whatever was saved
+under an older key name — any leftover turn/pick state from testing before
+this point simply can't be seen anymore. Game rules (payouts, spawn ratio,
+the 10-pick cap) live in the code itself, not in storage, so they're
+untouched by this or any future reset.
 
 - `js/database.js` — the flat-file database: load/save, per-turn digs,
   starting new turns, resetting the current turn, per-player reset,
