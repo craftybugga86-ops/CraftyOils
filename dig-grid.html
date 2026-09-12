@@ -12,10 +12,17 @@
 <a class="back-link" href="index.html">← Menu</a>
 
 <h1>⛏️ Dig Grid</h1>
-<div class="sub">Click a tile to dig: 🟫 dirt pays 1–9, 🪨 rock pays 3–27, 🛢️ an oil well pays 10–90 — and turns up rarest, in a 5:3:1 dirt:rock:oil spawn ratio. Player One, Two, and Three each get one turn, in order — once a player uses all 10 picks, it automatically passes to the next.</div>
+<div class="sub">Click a tile to dig: 🟫 dirt pays 1–9, 🪨 rock pays 3–27, 🛢️ an oil well pays 10–90 — and turns up rarest, in a 5:3:1 dirt:rock:oil spawn ratio. Player One, Two, and Three each get one turn per game, in order — once a player uses all 10 picks, it automatically passes to the next.</div>
+
+<div class="games-select" id="gamesSelect">
+  <span class="sub">Best of</span>
+  <button class="games-btn" data-games="1" type="button">1</button>
+  <button class="games-btn" data-games="3" type="button">3</button>
+  <button class="games-btn" data-games="5" type="button">5</button>
+</div>
 
 <div class="now-playing" id="nowPlayingBox">
-  <span class="sub">Now Playing</span>
+  <span class="sub">Game <span id="roundLabel">1</span> of <span id="totalGamesLabel">1</span> — Now Playing</span>
   <span id="activePlayerLabel">Player One</span>
 </div>
 
@@ -47,7 +54,7 @@
 
 <div class="game-over" id="gameOverPanel" hidden>
   <h2>🏁 Game Over</h2>
-  <p class="sub">Every player has taken their turn. Final results:</p>
+  <p class="sub" id="gameOverSummary">Final results:</p>
   <ul class="final-results" id="finalResultsList"></ul>
   <button id="playAgainBtn" class="btn-primary">Play Again</button>
 </div>

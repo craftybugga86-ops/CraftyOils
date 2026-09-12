@@ -10,7 +10,7 @@ const Database = (() => {
   // (a new commit changes it automatically — see ensureFreshBuild below).
   // Collection/turn data never survives past a build it wasn't saved under,
   // so a code deployment can never inherit a previous deployment's state.
-  const BUILD_ID = "2026-09-12T02";
+  const BUILD_ID = "2026-09-12T03";
   const BUILD_KEY = "craftyoils.buildId";
 
   // Wipes any saved game data the instant it's from a different build than
@@ -34,6 +34,7 @@ const Database = (() => {
   ensureFreshBuild();
 
   const MAX_DIGS_PER_TURN = 10;
+  const VALID_GAME_COUNTS = [1, 3, 5];
   const PLAYERS = ["player1", "player2", "player3"];
   const PLAYER_LABELS = {
     player1: "Player One",
@@ -58,22 +59,32 @@ const Database = (() => {
     return { turns: [emptyTurn(1)] };
   }
 
-  // Whose turn it is right now, in strict Player One -> Two -> Three order,
-  // and whether the match has finished (every player has had their turn).
-  function emptyMatch() {
-    return { activeIndex: 0, over: false };
+  // Whose turn it is right now (Player One -> Two -> Three, repeating for
+  // `totalGames` rounds), which round that is, and whether every round has
+  // finished for every player.
+  function emptyMatch(totalGames) {
+    return {
+      activeIndex: 0,
+      round: 1,
+      totalGames: VALID_GAME_COUNTS.includes(totalGames) ? totalGames : 1,
+      over: false,
+    };
   }
 
-  function emptyDb() {
-    const db = { __match__: emptyMatch() };
+  function emptyDb(totalGames) {
+    const db = { __match__: emptyMatch(totalGames) };
     PLAYERS.forEach(id => { db[id] = emptyPlayerRecord(); });
     return db;
   }
 
   function sanitizeMatch(raw) {
     const idx = Number(raw && raw.activeIndex);
+    const round = Number(raw && raw.round);
+    const totalGames = Number(raw && raw.totalGames);
     return {
       activeIndex: Number.isInteger(idx) && idx >= 0 && idx < PLAYERS.length ? idx : 0,
+      round: Number.isInteger(round) && round >= 1 ? round : 1,
+      totalGames: VALID_GAME_COUNTS.includes(totalGames) ? totalGames : 1,
       over: !!(raw && raw.over),
     };
   }
@@ -151,14 +162,29 @@ const Database = (() => {
   }
 
   // Hands control to the next player once the active player's turn is
-  // done; once Player Three's turn ends, the match is over for everyone.
+  // done. After Player Three finishes a round, either the next round starts
+  // (back to Player One) or, once totalGames rounds are complete, the match
+  // is over for everyone.
   function advanceMatch() {
     const db = load();
-    const nextIndex = db.__match__.activeIndex + 1;
-    if (nextIndex >= PLAYERS.length) {
-      db.__match__.over = true;
+    const m = db.__match__;
+
+    if (m.activeIndex < PLAYERS.length - 1) {
+      m.activeIndex += 1;
+    } else if (m.round < m.totalGames) {
+      m.round += 1;
+      m.activeIndex = 0;
     } else {
-      db.__match__.activeIndex = nextIndex;
+      m.over = true;
+      save(db);
+      return db;
+    }
+
+    // The player now up may not have played this round yet — give them a
+    // fresh turn for it if not.
+    const nextId = PLAYERS[m.activeIndex];
+    if (db[nextId].turns.length < m.round) {
+      db[nextId].turns.push(emptyTurn(m.round));
     }
     save(db);
     return db;
@@ -202,8 +228,11 @@ const Database = (() => {
     return db;
   }
 
-  function resetAll() {
-    const db = emptyDb();
+  // Starts a completely new match. Pass 1, 3, or 5 to pick how many rounds
+  // it runs; omit it to keep whatever was selected last.
+  function resetAll(totalGames) {
+    const previous = load().__match__.totalGames;
+    const db = emptyDb(totalGames || previous);
     save(db);
     return db;
   }

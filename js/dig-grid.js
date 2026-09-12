@@ -26,8 +26,11 @@ const totalEl = document.getElementById("total");
 const countEl = document.getElementById("count");
 const resetBtn = document.getElementById("resetBtn");
 const showAllBtn = document.getElementById("showAllBtn");
+const gamesButtons = document.querySelectorAll(".games-btn");
 const nowPlayingBox = document.getElementById("nowPlayingBox");
 const activePlayerLabelEl = document.getElementById("activePlayerLabel");
+const roundLabelEl = document.getElementById("roundLabel");
+const totalGamesLabelEl = document.getElementById("totalGamesLabel");
 const turnBarEl = document.querySelector(".turn-bar");
 const turnInfoEl = document.getElementById("turnInfo");
 const resetTurnBtn = document.getElementById("resetTurnBtn");
@@ -40,6 +43,7 @@ const importBtn = document.getElementById("importBtn");
 const importInput = document.getElementById("importInput");
 const resetGameBtn = document.getElementById("resetGameBtn");
 const gameOverPanel = document.getElementById("gameOverPanel");
+const gameOverSummary = document.getElementById("gameOverSummary");
 const finalResultsList = document.getElementById("finalResultsList");
 const playAgainBtn = document.getElementById("playAgainBtn");
 const gusherBadge = document.getElementById("gusherBadge");
@@ -131,6 +135,18 @@ function updateTurnInfo() {
   grid.classList.toggle("limit-reached", limitReached);
   showAllBtn.disabled = limitReached;
   activePlayerLabelEl.textContent = Database.PLAYER_LABELS[activePlayerId()];
+
+  const match = Database.load().__match__;
+  roundLabelEl.textContent = match.round;
+  totalGamesLabelEl.textContent = match.totalGames;
+}
+
+// Highlights whichever "Best of" option matches the current match.
+function renderGamesSelector() {
+  const totalGames = Database.load().__match__.totalGames;
+  gamesButtons.forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.games) === totalGames);
+  });
 }
 
 // Shows every player's lifetime totals side by side, instead of only
@@ -227,6 +243,11 @@ function applyMatchVisibility() {
 
 function renderGameOver() {
   const db = Database.load();
+  const totalGames = db.__match__.totalGames;
+  gameOverSummary.textContent = totalGames === 1
+    ? "Final results:"
+    : `Every player has played ${totalGames} games. Final results:`;
+
   const results = Database.PLAYERS
     .map(id => ({ id, label: Database.PLAYER_LABELS[id], total: Database.grandTotal(db[id]) }))
     .sort((a, b) => b.total - a.total);
@@ -255,13 +276,19 @@ function maybeAdvanceMatch() {
   if (used < MAX_DIGS_PER_TURN) return;
 
   const finishedLabel = Database.PLAYER_LABELS[playerId];
+  const roundBefore = Database.load().__match__.round;
   Database.advanceMatch();
+  const after = Database.load();
 
-  if (Database.isMatchOver(Database.load())) {
+  if (after.__match__.over) {
     showPassBanner(`${finishedLabel}'s turn is over. Game over!`);
   } else {
     const nextLabel = Database.PLAYER_LABELS[activePlayerId()];
-    showPassBanner(`${finishedLabel}'s turn is over — now playing ${nextLabel}.`);
+    showPassBanner(
+      after.__match__.round > roundBefore
+        ? `Game ${roundBefore} complete! Starting Game ${after.__match__.round} — now playing ${nextLabel}.`
+        : `${finishedLabel}'s turn is over — now playing ${nextLabel}.`
+    );
     renderGrid();
   }
   refreshAll();
@@ -269,6 +296,7 @@ function maybeAdvanceMatch() {
 
 function refreshAll() {
   updateTurnInfo();
+  renderGamesSelector();
   renderCollection();
   renderTurnHistory();
   renderGusher();
@@ -350,17 +378,29 @@ resetTurnBtn.addEventListener("click", () => {
   refreshAll();
 });
 
-function resetGame() {
-  if (!confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) return;
-  Database.resetAll();
+function resetGame(totalGames) {
+  const db = Database.load();
+  const hasProgress = Database.PLAYERS.some(id =>
+    db[id].turns.some(turn => Database.turnDigCount(turn) > 0)
+  );
+  if (hasProgress && !confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) {
+    return;
+  }
+  Database.resetAll(totalGames);
   Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
   passBanner.hidden = true;
   renderGrid();
   refreshAll();
 }
 
-resetGameBtn.addEventListener("click", resetGame);
-playAgainBtn.addEventListener("click", resetGame);
+resetGameBtn.addEventListener("click", () => resetGame());
+playAgainBtn.addEventListener("click", () => resetGame());
+
+gamesButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    resetGame(Number(btn.dataset.games));
+  });
+});
 
 exportBtn.addEventListener("click", () => {
   Database.exportFile();
