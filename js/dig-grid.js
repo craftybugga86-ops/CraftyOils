@@ -190,7 +190,7 @@ function renderGusher() {
   gusherTotalEl.textContent = best.total;
   gusherTurnEl.textContent = best.turnNumber ? ` (Turn ${best.turnNumber})` : "";
 
-  const previousBest = lastGusherByPlayer[playerId] ?? 0;
+  const previousBest = lastGusherByPlayer[playerId] || 0;
   gusherBadge.classList.remove("new-record");
   if (best.total > 0 && best.total > previousBest) {
     void gusherBadge.offsetWidth; // restart the animation if it's already mid-play
