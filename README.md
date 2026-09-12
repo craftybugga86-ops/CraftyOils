@@ -46,14 +46,14 @@ Reachable from the title screen's Play button, at `dig-grid.html`.
 Every dig is recorded against the player's *current turn*: a count and
 resource subtotal per type (Dirt, Rock, Oil Well) for that turn alone. The
 **Collection** panel sums every turn played so far into lifetime totals per
-type, plus a grand total, for whichever player is selected. **Turn History**
-lists each turn played — picks used and that turn's total — so results can
-be compared turn by turn, not just as one lifetime figure. Switching the
-"Playing as" / "Viewing" dropdown (on the Dig Grid or the title screen's
-Collection modal) switches whose data you're adding to or looking at.
-"Reset This Player" clears a player's entire turn history (with a
-confirmation prompt); **Reset Game (All Players)** does the same for
-Player One, Two, and Three at once, for starting the whole game over.
+type, plus a grand total — shown as **one card per player, side by side**,
+so all three players' results are visible at once rather than one at a time
+behind a dropdown. Each card has its own **Reset This Player** (clears that
+player's entire turn history, with a confirmation prompt); **Reset Game
+(All Players)** does the same for all three at once, for starting the whole
+game over. **Turn History** lists each turn played by the "Playing as"
+player — picks used and that turn's total — so results can be compared turn
+by turn, not just as one lifetime figure.
 
 Records live in a flat-file JSON database — one object keyed by player, each
 holding an ordered array of turn records — persisted to `localStorage` for
@@ -70,10 +70,10 @@ structure as an actual `.json` file.
 A per-turn high score, themed to the drilling setting rather than a generic
 "high score": each player's best single turn total is tracked and shown as
 a **🛢️ Biggest Gusher** badge — the total and which turn hit it (e.g.
-"Biggest Gusher: 512 (Turn 3)") — next to the Dig Grid's stats, and in the
-title screen's Collection modal for whichever player is being viewed. The
-badge gives a brief "blowout" pulse the moment a turn actually beats the
-player's previous record.
+"Biggest Gusher: 512 (Turn 3)"). It sits next to the Dig Grid's stats for
+whoever is "Playing as", and appears inside each player's own card in the
+title screen's Collection modal. The Dig Grid badge gives a brief "blowout"
+pulse the moment a turn actually beats that player's previous record.
 
 Tiles stopping for one player while the others are still free to dig is
 expected — each player's 10-pick cap is independent — but it used to be easy

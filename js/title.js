@@ -14,34 +14,44 @@ Object.entries(modals).forEach(([btnId, modal]) => {
   });
 });
 
-const collectionPlayerSelect = document.getElementById("playerSelect");
-collectionPlayerSelect.value = Database.getCurrentPlayer();
-collectionPlayerSelect.addEventListener("change", () => {
-  Database.setCurrentPlayer(collectionPlayerSelect.value);
-  renderCollection();
-});
+const collectionPlayersEl = document.getElementById("collectionPlayers");
 
+// Shows every player's lifetime totals and biggest gusher side by side,
+// rather than requiring a dropdown to flip between them one at a time.
 function renderCollection() {
-  const collectionList = document.getElementById("collectionList");
-  const collectionTotalEl = document.getElementById("collectionTotal");
-  const record = Database.load()[collectionPlayerSelect.value];
-  const agg = Database.aggregate(record);
-  collectionList.innerHTML = "";
-  Object.entries(Database.TYPE_INFO).forEach(([type, info]) => {
-    const entry = agg[type];
-    const row = document.createElement("li");
-    row.innerHTML =
-      `<span class="collection-icon">${info.icon}</span>` +
-      `<span class="collection-label">${info.label}</span>` +
-      `<span class="collection-count">×${entry.count}</span>` +
-      `<span class="collection-value">${entry.total}</span>`;
-    collectionList.appendChild(row);
-  });
-  collectionTotalEl.textContent = Database.grandTotal(record);
+  const db = Database.load();
+  collectionPlayersEl.innerHTML = "";
 
-  const best = Database.bestTurn(record);
-  document.getElementById("gusherTotal").textContent = best.total;
-  document.getElementById("gusherTurn").textContent = best.turnNumber ? ` (Turn ${best.turnNumber})` : "";
+  Database.PLAYERS.forEach(id => {
+    const record = db[id];
+    const agg = Database.aggregate(record);
+    const best = Database.bestTurn(record);
+
+    const rows = Object.entries(Database.TYPE_INFO).map(([type, info]) => {
+      const entry = agg[type];
+      return `<li>` +
+        `<span class="collection-icon">${info.icon}</span>` +
+        `<span class="collection-label">${info.label}</span>` +
+        `<span class="collection-count">×${entry.count}</span>` +
+        `<span class="collection-value">${entry.total}</span>` +
+        `</li>`;
+    }).join("");
+
+    const gusherLine = best.total > 0
+      ? `🛢️ Biggest Gusher: ${best.total} (Turn ${best.turnNumber})`
+      : `🛢️ Biggest Gusher: 0`;
+
+    const card = document.createElement("div");
+    card.className = "player-collection";
+    card.innerHTML =
+      `<div class="player-collection-header">` +
+        `<span>${Database.PLAYER_LABELS[id]}</span>` +
+        `<span class="player-collection-total">${Database.grandTotal(record)}</span>` +
+      `</div>` +
+      `<ul class="collection-list">${rows}</ul>` +
+      `<div class="player-collection-gusher">${gusherLine}</div>`;
+    collectionPlayersEl.appendChild(card);
+  });
 }
 
 document.querySelectorAll(".overlay").forEach(overlay => {

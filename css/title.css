@@ -180,38 +180,45 @@ body {
   color: #9aa0a6;
   margin-top: -6px;
 }
-.player-select {
+.collection-players {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: #9aa0a6;
+  flex-direction: column;
+  gap: 12px;
   margin: 12px 0;
 }
-.player-select select {
+.player-collection {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  color: #eee;
-  padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.player-collection-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
   font-size: 0.9rem;
-  cursor: pointer;
+  font-weight: 700;
+}
+.player-collection-total {
+  color: var(--gold);
 }
 .collection-list {
   list-style: none;
-  margin: 0 0 8px;
+  margin: 0;
   padding: 0;
 }
 .collection-list li {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
+  padding: 4px 0;
   border-top: 1px solid var(--panel-border);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 .collection-list li:first-child { border-top: none; }
-.collection-icon { font-size: 18px; width: 22px; text-align: center; }
+.collection-icon { font-size: 16px; width: 20px; text-align: center; }
 .collection-label { flex: 1; }
 .collection-count { color: #9aa0a6; }
 .collection-value {
@@ -220,36 +227,10 @@ body {
   min-width: 36px;
   text-align: right;
 }
-.collection-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 10px;
+.player-collection-gusher {
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid var(--panel-border);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-.collection-footer #collectionTotal {
-  color: var(--gold);
-}
-.gusher {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 6px 14px;
-  border: 1px solid #6b4a2f;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(138,90,0,0.25), rgba(255,209,102,0.08));
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #e8c990;
-}
-.gusher-icon { font-size: 1rem; }
-.gusher #gusherTotal {
-  color: var(--gold);
-  font-weight: 700;
-}
-#gusherTurn {
-  color: #9aa0a6;
-  font-weight: 400;
-  margin-left: 4px;
 }

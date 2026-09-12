@@ -16,9 +16,7 @@ const playerSelect = document.getElementById("playerSelect");
 const turnInfoEl = document.getElementById("turnInfo");
 const resetTurnBtn = document.getElementById("resetTurnBtn");
 const nextTurnBtn = document.getElementById("nextTurnBtn");
-const collectionList = document.getElementById("collectionList");
-const collectionTotalEl = document.getElementById("collectionTotal");
-const resetCollectionBtn = document.getElementById("resetCollectionBtn");
+const collectionPlayersEl = document.getElementById("collectionPlayers");
 const turnHistoryList = document.getElementById("turnHistoryList");
 const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
@@ -100,21 +98,50 @@ function updateTurnInfo() {
   return used;
 }
 
+// Shows every player's lifetime totals side by side, instead of only
+// whoever the "Playing as" dropdown happens to have selected.
 function renderCollection() {
-  const record = playerRecord();
-  const agg = Database.aggregate(record);
-  collectionList.innerHTML = "";
-  Object.entries(Database.TYPE_INFO).forEach(([type, info]) => {
-    const entry = agg[type];
-    const row = document.createElement("li");
-    row.innerHTML =
-      `<span class="collection-icon">${info.icon}</span>` +
-      `<span class="collection-label">${info.label}</span>` +
-      `<span class="collection-count">×${entry.count}</span>` +
-      `<span class="collection-value">${entry.total}</span>`;
-    collectionList.appendChild(row);
+  const db = Database.load();
+  collectionPlayersEl.innerHTML = "";
+
+  Database.PLAYERS.forEach(id => {
+    const record = db[id];
+    const agg = Database.aggregate(record);
+
+    const rows = Object.entries(Database.TYPE_INFO).map(([type, info]) => {
+      const entry = agg[type];
+      return `<li>` +
+        `<span class="collection-icon">${info.icon}</span>` +
+        `<span class="collection-label">${info.label}</span>` +
+        `<span class="collection-count">×${entry.count}</span>` +
+        `<span class="collection-value">${entry.total}</span>` +
+        `</li>`;
+    }).join("");
+
+    const card = document.createElement("div");
+    card.className = "player-collection";
+    card.innerHTML =
+      `<div class="player-collection-header">` +
+        `<span>${Database.PLAYER_LABELS[id]}</span>` +
+        `<span class="player-collection-total">${Database.grandTotal(record)}</span>` +
+      `</div>` +
+      `<ul class="collection-list">${rows}</ul>` +
+      `<button class="text-btn" data-reset-player="${id}">Reset This Player</button>`;
+    collectionPlayersEl.appendChild(card);
   });
-  collectionTotalEl.textContent = Database.grandTotal(record);
+
+  collectionPlayersEl.querySelectorAll("[data-reset-player]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.resetPlayer;
+      if (!confirm(`Clear ${Database.PLAYER_LABELS[id]}'s entire history? This can't be undone.`)) return;
+      Database.resetPlayer(id);
+      if (id === currentPlayer()) {
+        gridsByPlayer[id] = createGridData();
+        renderGrid();
+      }
+      refreshAll();
+    });
+  });
 }
 
 function renderTurnHistory() {
@@ -276,14 +303,6 @@ nextTurnBannerBtn.addEventListener("click", nextTurn);
 
 playerSelect.addEventListener("change", () => {
   Database.setCurrentPlayer(currentPlayer());
-  renderGrid();
-  refreshAll();
-});
-
-resetCollectionBtn.addEventListener("click", () => {
-  if (!confirm(`Clear ${Database.PLAYER_LABELS[currentPlayer()]}'s entire history? This can't be undone.`)) return;
-  Database.resetPlayer(currentPlayer());
-  gridsByPlayer[currentPlayer()] = createGridData();
   renderGrid();
   refreshAll();
 });

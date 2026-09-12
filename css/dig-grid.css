@@ -239,6 +239,45 @@ button:hover { filter: brightness(1.05); }
   border-radius: 10px;
   padding: 16px 18px;
 }
+.collection.collection-wide {
+  max-width: 460px;
+}
+.collection-players {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+@media (max-width: 480px) {
+  .collection-players {
+    grid-template-columns: 1fr;
+  }
+}
+.player-collection {
+  background: #1b1f24;
+  border: 1px solid var(--cell-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.player-collection-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.player-collection-total {
+  color: var(--gold);
+}
+.player-collection .collection-list li {
+  font-size: 0.8rem;
+  padding: 4px 0;
+}
+.player-collection .text-btn {
+  display: inline-block;
+  margin-top: 8px;
+}
 .collection h2 {
   font-size: 1rem;
   margin: 0 0 12px;
