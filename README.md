@@ -70,17 +70,23 @@ player — picks used and that turn's total — so results can be compared turn
 by turn, not just as one lifetime figure.
 
 Records live in a flat-file JSON database — one object keyed by player, each
-holding an ordered array of turn records — persisted to `localStorage` under
-the key `craftyoils.db.v2`, and portable via **Export Database** / **Import
-Database** on the Dig Grid page, which write and read that same JSON
-structure as an actual `.json` file.
+holding an ordered array of turn records — persisted to `localStorage`, and
+portable via **Export Database** / **Import Database** on the Dig Grid page,
+which write and read that same JSON structure as an actual `.json` file.
 
-That key is versioned on purpose: bumping it (as of this reset) makes every
-visitor start completely clean, since nothing reads whatever was saved
-under an older key name — any leftover turn/pick state from testing before
-this point simply can't be seen anymore. Game rules (payouts, spawn ratio,
-the 10-pick cap) live in the code itself, not in storage, so they're
-untouched by this or any future reset.
+**Collection never carries over from one deployment to the next.**
+`js/database.js` stamps every saved game with a `BUILD_ID` constant; on
+load, if a visitor's stored stamp doesn't match the `BUILD_ID` currently
+running, their saved game is wiped before anything else touches it — Player
+One, Two, and Three all start over at Turn 1, 0/10 picks, Collection at
+zero. Progress still persists normally *within* one deployment (a reload
+without a new deploy keeps your picks); it just can never survive past the
+deployment it was saved under. **Whoever ships a future update that should
+reset every player's progress must change `BUILD_ID` in `js/database.js`** —
+that's the one thing that has to be remembered by hand; everything else
+about the reset is automatic. Game rules (payouts, spawn ratio, the 10-pick
+cap) live in the code itself, never in storage, so no reset ever touches
+them.
 
 - `js/database.js` — the flat-file database: load/save, per-turn digs,
   starting new turns, resetting the current turn, per-player reset,

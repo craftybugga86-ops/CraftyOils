@@ -3,11 +3,35 @@
 // to localStorage as a single blob for the browser session, and
 // exportable/importable as an actual .json file for portability.
 const Database = (() => {
-  // Bumping this key forces every visitor to start clean: any data saved
-  // under an older key is simply never read again, which is exactly what a
-  // hard reset needs — no leftover turn/pick state can survive it.
-  const STORAGE_KEY = "craftyoils.db.v2";
+  const STORAGE_KEY = "craftyoils.db";
   const EXPORT_FILENAME = "craftyoils-database.json";
+
+  // Bump this on every deployment that should start every player over
+  // (a new commit changes it automatically — see ensureFreshBuild below).
+  // Collection/turn data never survives past a build it wasn't saved under,
+  // so a code deployment can never inherit a previous deployment's state.
+  const BUILD_ID = "2026-09-12T01";
+  const BUILD_KEY = "craftyoils.buildId";
+
+  // Wipes any saved game data the instant it's from a different build than
+  // the one currently running, before anything else in this module reads
+  // or writes localStorage.
+  function ensureFreshBuild() {
+    let storedBuild;
+    try {
+      storedBuild = localStorage.getItem(BUILD_KEY);
+    } catch {
+      return;
+    }
+    if (storedBuild === BUILD_ID) return;
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(BUILD_KEY, BUILD_ID);
+    } catch {
+      // storage unavailable (private mode, quota, etc.) — nothing to clean up
+    }
+  }
+  ensureFreshBuild();
 
   const MAX_DIGS_PER_TURN = 10;
   const PLAYERS = ["player1", "player2", "player3"];
