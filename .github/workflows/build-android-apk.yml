@@ -7,7 +7,7 @@ on:
       - main
       - master
     paths:
-      - "android/**"
+      - "projects/crafty-oils/android/**"
       - ".github/workflows/build-android-apk.yml"
 
 permissions:
@@ -27,17 +27,17 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Grant execute permission for gradlew
-        working-directory: android
+        working-directory: projects/crafty-oils/android
         run: chmod +x gradlew
 
       - name: Build debug APK
-        working-directory: android
+        working-directory: projects/crafty-oils/android
         run: ./gradlew assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
           name: crafty-oils-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: projects/crafty-oils/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
       # Actions-artifact downloads are served from Azure blob storage, which
@@ -45,11 +45,11 @@ jobs:
       # committing it straight into the repo gives a plain `git pull` path.
       - name: Commit built APK back into the repo
         run: |
-          mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/crafty-oils-debug.apk
+          mkdir -p projects/crafty-oils/dist
+          cp projects/crafty-oils/android/app/build/outputs/apk/debug/app-debug.apk projects/crafty-oils/dist/crafty-oils-debug.apk
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f dist/crafty-oils-debug.apk
+          git add -f projects/crafty-oils/dist/crafty-oils-debug.apk
           if git diff --cached --quiet; then
             echo "APK unchanged, nothing to commit"
           else

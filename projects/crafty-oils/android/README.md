@@ -9,8 +9,8 @@ persists entirely on-device via the WebView's local storage.
 
 ## Keeping the assets in sync
 
-The web game itself is the source of truth. After changing anything at the
-repo root (`index.html`, `dig-grid.html`, `css/`, `js/`), copy the updated
+The web game itself is the source of truth. After changing anything in the
+project root (`index.html`, `dig-grid.html`, `css/`, `js/`), copy the updated
 files into `app/src/main/assets/` before rebuilding:
 
 ```sh
@@ -23,7 +23,7 @@ cp -r ../css ../js app/src/main/assets/
 Building requires the Android SDK (specifically `dl.google.com`, which
 isn't reachable from every environment). The included GitHub Actions
 workflow (`.github/workflows/build-android-apk.yml`) builds a debug APK on
-every push that touches `android/**`, or on demand via the Actions tab's
+every push that touches `projects/crafty-oils/android/**`, or on demand via the Actions tab's
 "Run workflow" button, and uploads it as a downloadable build artifact
 named `crafty-oils-debug-apk`.
 
