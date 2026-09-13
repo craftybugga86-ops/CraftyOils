@@ -5,17 +5,18 @@ const ICONS = {
 };
 const GRID_SIZE = 9;
 
-// Reward multiplier per tile type: dirt is common and low-value, an oil
-// well is rare and pays out big.
-const MULTIPLIERS = { dirt: 1, rock: 3, oilwell: 10 };
+// Reward multiplier per tile type: dirt pays out biggest and an oil well
+// smallest, so the tile you turn up constantly is the one carrying the
+// score and the rare one is the dud.
+const MULTIPLIERS = { dirt: 10, rock: 3, oilwell: 1 };
 
 // How often each type spawns, as parts of a whole — dirt : rock : oilwell
-// = 1 : 3 : 5, so an oil well turns up roughly 5x as often as dirt, making
-// dirt the scarce one that crafting bottlenecks on.
+// = 5 : 3 : 1, so dirt turns up roughly 5x as often as an oil well, making
+// oil the scarce one that crafting bottlenecks on.
 const SPAWN_WEIGHTS = [
-  { type: "dirt", weight: 1 },
+  { type: "dirt", weight: 5 },
   { type: "rock", weight: 3 },
-  { type: "oilwell", weight: 5 },
+  { type: "oilwell", weight: 1 },
 ];
 const SPAWN_TOTAL_WEIGHT = SPAWN_WEIGHTS.reduce((sum, w) => sum + w.weight, 0);
 const MAX_DIGS_PER_TURN = Database.MAX_DIGS_PER_TURN;

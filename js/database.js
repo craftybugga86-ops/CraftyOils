@@ -11,7 +11,7 @@ const Database = (() => {
   // (a new commit changes it automatically — see ensureFreshBuild below).
   // Collection/turn data never survives past a build it wasn't saved under,
   // so a code deployment can never inherit a previous deployment's state.
-  const BUILD_ID = "2026-09-13T01";
+  const BUILD_ID = "2026-09-13T02";
   const BUILD_KEY = "craftyoils.buildId";
 
   // Wipes any saved game data the instant it's from a different build than

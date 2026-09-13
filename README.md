@@ -43,15 +43,17 @@ roll, and its own rarity:
 
 | Tile | Multiplier | Payout | Spawn ratio |
 | --- | --- | --- | --- |
-| 🟫 Dirt | 1× | 1–9 | 1 |
+| 🟫 Dirt | 10× | 10–90 | 5 |
 | 🪨 Rock | 3× | 3–27 | 3 |
-| 🛢️ Oil Well | 10× | 10–90 | 5 |
+| 🛢️ Oil Well | 1× | 1–9 | 1 |
 
-Oil is both the most common tile and the biggest payout, so a dig-only
-score climbs fast — the scarcity that matters is **dirt**, which turns up
-roughly a fifth as often as oil and which every brick and window in Crafty
-Crafting needs. A high Crafty Oils score and a full workshop are therefore
-two different goals, and dirt is what trades between them.
+Payout runs the *opposite* way to the usual rarity instinct: dirt is both
+the commonest tile and the biggest payout, while an oil well is the rare
+find worth almost nothing on the board. So a Crafty Oils score climbs on
+dirt, and what's actually scarce is **oil** — turning up roughly a fifth as
+often as dirt, and the ingredient every barrel, window and steel beam in
+Crafty Crafting needs. A high dig score and a full workshop are therefore
+two different goals, and oil is what trades between them.
 
 Each player digs their **own independently random, private board**: nobody
 sees what tiles the others have revealed, or is influenced by their layout.
@@ -108,9 +110,11 @@ picker** and whoever is spending selects themselves.
 | 🔩 Steel Beam | 2 rock + 3 oil |
 
 Costs are deliberately tiny, because a single game only gives each player
-ten picks. Every card shows a per-line `have/needed` readout that turns red
-on whichever ingredient is short, and its **Craft** button stays disabled
-until the whole recipe is covered. Crafting **consumes** its resources: a
+ten picks — and with oil at a 1-in-9 spawn, a ten-pick turn yields only
+about one of it, so anything priced in oil is the real investment. Every
+card shows a per-line `have/needed` readout that turns red on whichever
+ingredient is short, and its **Craft** button stays disabled until the whole
+recipe is covered. Crafting **consumes** its resources: a
 dug tile can only ever be spent once, tracked as a running `spent` ledger
 against what the player's turns dug.
 
@@ -133,10 +137,10 @@ affordable.
 | 🏡 Villa | 8 bricks + 3 windows + 2 beams + 2 gears | 650 |
 | 🏰 Estate | 12 bricks + 5 windows + 4 beams + 3 gears + 2 barrels | 1200 |
 
-Buildings stand permanently and never refund. Because every one of them
-needs bricks, and bricks and windows both need scarce dirt, the top two
-tiers cost more dirt than one match yields — they're built up across
-several **seasons**.
+Buildings stand permanently and never refund. Because windows, beams and
+barrels all cost scarce oil, the upper tiers run to far more oil than one
+match yields — an Estate needs roughly 28 of it against the ~5 a best-of-5
+turns up — so the big builds are funded across several **seasons**.
 
 - `housing.html` / `js/housing.js` — building cards, wallet, estate ledger
 
