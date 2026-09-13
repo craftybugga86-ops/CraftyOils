@@ -242,14 +242,3 @@ was last selected, which (combined with independent per-player turn caps)
 made a returning, already-capped player look like the whole game was
 broken — moot now that there's no manual player selection at all, only the
 automatic one-turn-each match described above.
-
-## DMZHQ (separate project)
-
-`dmzhq/` holds an unrelated second project sharing this repo: a vlog wall
-that gathers social channels and videos from every platform in the Elgato
-ecosystem — YouTube, Twitch, Kick, TikTok, Facebook, Instagram, X, Trovo,
-Vimeo, Spotify and Discord — and plays each one in the platform's own
-iframe, so no media is ever hosted or proxied here. Cards are zero-request
-facades until you press play, and only one player is ever alive at a time.
-It shares nothing with the games but `js/error-banner.js`. See
-`dmzhq/README.md`.
