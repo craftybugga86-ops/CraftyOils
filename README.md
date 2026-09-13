@@ -1,39 +1,60 @@
-# Crafty Oils
+# Crafty Works
 
-Run it by opening `index.html` in a browser — it's the title screen and entry point.
+Three linked games sharing one stash, run by opening `index.html` in a
+browser — it's the title screen and entry point.
 
-Also ships as a native Android app (a WebView wrapper around this same
-game, no network permission needed) — see `android/README.md`. The GitHub
+| Game | What it does |
+| --- | --- |
+| ⛏️ **Crafty Oils** (`dig-grid.html`) | Dig a 9×9 grid for 🟫 dirt, 🪨 rock and 🛢️ oil |
+| 🔨 **Crafty Crafting** (`crafting.html`) | Spend those resources on building goods |
+| 🏘️ **Crafty Housing** (`housing.html`) | Spend those goods on buildings worth prestige |
+
+Each one feeds the next: nothing can be crafted that wasn't dug, and
+nothing can be built that wasn't crafted. All three read and write the same
+per-player record described under **Collection & Database**.
+
+Also ships as a native Android app (a WebView wrapper around these same
+pages, no network permission needed) — see `android/README.md`. The GitHub
 Actions workflow at `.github/workflows/build-android-apk.yml` builds an
-installable debug APK automatically.
+installable debug APK automatically, signed with the checked-in
+`android/app/debug.keystore` so successive builds install over each other
+instead of being rejected as a signature mismatch.
 
 ## Title Screen
 
-The main menu: **Play** heads into the Dig Grid, and **Collection** /
-**How To Play** / **Settings** / **Credits** open in-place modals. Settings
-currently holds a sound on/off toggle (persisted via `localStorage`). As more
-game elements are added, they'll get their own menu buttons here.
+The hub: the three games get their own tall buttons at the top, and
+**Collection** / **How To Play** / **Settings** / **Credits** open in-place
+modals below them. Collection shows every player's dug resources, biggest
+riser, and crafted/built/prestige totals side by side. Settings currently
+holds a sound on/off toggle (persisted via `localStorage`).
 
 - `index.html` — title screen markup
 - `css/title.css` — title screen and modal styling
 - `js/title.js` — menu button wiring, modal open/close, sound toggle
 
-## Dig Grid
+## Crafty Oils (the Dig Grid)
 
-A drilling mini-game mechanic: a 9x9 grid of hidden tiles (dirt, rock, or oil
-well). Clicking a tile digs it, revealing a reward. Each type has its own
-payout multiplier on a 1–9 base roll, and its own rarity:
+A drilling mini-game mechanic: a 9x9 grid of tiles that are all anonymous
+**"?"** until picked — no class, attribute, or content in the DOM gives a
+tile's type away before it's clicked, so inspecting the page can't be used
+to find the oil. Clicking a tile digs it, revealing its icon and a
+highlighted reward. Each type has its own payout multiplier on a 1–9 base
+roll, and its own rarity:
 
 | Tile | Multiplier | Payout | Spawn ratio |
 | --- | --- | --- | --- |
-| 🟫 Dirt | 1× | 1–9 | 5 |
+| 🟫 Dirt | 1× | 1–9 | 1 |
 | 🪨 Rock | 3× | 3–27 | 3 |
-| 🛢️ Oil Well | 10× | 10–90 | 1 |
+| 🛢️ Oil Well | 10× | 10–90 | 5 |
 
-So dirt turns up roughly 5x as often as an oil well, but an oil well pays out
-up to 10x as much — the rarer tile is worth chasing. Each player digs their
-**own independently random, private board**: nobody sees what tiles the
-others have revealed, or is influenced by their layout.
+Oil is both the most common tile and the biggest payout, so a dig-only
+score climbs fast — the scarcity that matters is **dirt**, which turns up
+roughly a fifth as often as oil and which every brick and window in Crafty
+Crafting needs. A high Crafty Oils score and a full workshop are therefore
+two different goals, and dirt is what trades between them.
+
+Each player digs their **own independently random, private board**: nobody
+sees what tiles the others have revealed, or is influenced by their layout.
 
 **It's a strict, automatic three-player match**, not free player-switching,
 and **no tile is ever shown until a match length is chosen**. Landing on the
@@ -58,18 +79,80 @@ reshuffles their current board without touching picks used.
 Once Player Three's turn ends in the final game, **the match is over**: the
 board and controls disappear, replaced by a **Final Results** screen ranking
 all three players by their *combined* total across every game played,
-highest first. Its **Play Again** button — like **Reset Game (All
-Players)** in the Collection panel — wipes everyone's history and drops back
-to the "Choose Your Match" setup step (the last-picked length stays
-pre-highlighted, but nothing plays again until it's confirmed).
+highest first. Its **Play Again** button — like **New Dig Season (All
+Players)** in the Collection panel — starts a fresh season and drops back to
+the "Choose Your Match" setup step (the last-picked length stays
+pre-highlighted, but nothing plays again until it's confirmed). See
+**Seasons** below for exactly what a season reset does and doesn't clear.
 
-Reachable from the title screen's Play button, at `dig-grid.html`.
+Reachable from the title screen's Crafty Oils button, at `dig-grid.html`.
 
 - `dig-grid.html` — page markup, the "Best of" selector, active-player
   display, and game container
 - `css/dig-grid.css` — grid, tile, turn-bar, and final-results styling
 - `js/dig-grid.js` — grid generation (weighted spawn, per-type payout),
   digging, and the automatic Player One → Two → Three → (next game) hand-off
+
+## Crafty Crafting
+
+Spends raw resources on building goods. Unlike the Dig Grid there's no turn
+order here — nobody is handed control, so the page just has a **player
+picker** and whoever is spending selects themselves.
+
+| Good | Costs |
+| --- | --- |
+| 🧱 Brick | 1 dirt + 1 rock |
+| ⚙️ Gear | 2 rock |
+| 🛢️ Barrel | 3 oil |
+| 🪟 Window | 1 dirt + 2 oil |
+| 🔩 Steel Beam | 2 rock + 3 oil |
+
+Costs are deliberately tiny, because a single game only gives each player
+ten picks. Every card shows a per-line `have/needed` readout that turns red
+on whichever ingredient is short, and its **Craft** button stays disabled
+until the whole recipe is covered. Crafting **consumes** its resources: a
+dug tile can only ever be spent once, tracked as a running `spent` ledger
+against what the player's turns dug.
+
+- `crafting.html` / `js/crafting.js` — recipe cards, wallet, workshop ledger
+- `css/workshop.css` — shared styling for this page and Crafty Housing
+- `js/workshop.js` — the player picker, wallet chips, and cost lines both
+  spending pages use
+
+## Crafty Housing
+
+Spends crafted goods on somewhere to live, the same shape as Crafting — a
+player picker, a wallet of what's unbuilt, and cards that only enable once
+affordable.
+
+| Building | Costs | Prestige |
+| --- | --- | --- |
+| 🏕️ Tent | 2 bricks | 50 |
+| 🛖 Shack | 3 bricks + 1 window | 120 |
+| 🏠 House | 5 bricks + 2 windows + 1 beam | 300 |
+| 🏡 Villa | 8 bricks + 3 windows + 2 beams + 2 gears | 650 |
+| 🏰 Estate | 12 bricks + 5 windows + 4 beams + 3 gears + 2 barrels | 1200 |
+
+Buildings stand permanently and never refund. Because every one of them
+needs bricks, and bricks and windows both need scarce dirt, the top two
+tiers cost more dirt than one match yields — they're built up across
+several **seasons**.
+
+- `housing.html` / `js/housing.js` — building cards, wallet, estate ledger
+
+## Seasons
+
+Starting a new match (**Play Again**, **New Dig Season**, or just picking a
+"Best of" length) opens a new *dig season*. A season reset clears every
+player's turn history **and** the raw-resource ledger those turns fed —
+those two have to move together, since clearing dug totals while keeping
+`spent` would leave a player owing resources they no longer have. What it
+deliberately keeps is **crafted goods and finished buildings**, so a Villa
+or Estate can be funded over several matches instead of needing to come out
+of one.
+
+For a genuinely total wipe there's **Reset This Player** on each Collection
+card, which clears that player's digs, workshop, and estate alike.
 
 ## Collection & Database
 
@@ -78,18 +161,38 @@ game they've played: a count and resource subtotal per type (Dirt, Rock, Oil
 Well). The **Collection** panel sums *every game's* turn into a grand total
 per player — shown as **one card per player, side by side**, so all three
 are visible at once regardless of whose turn it currently is. Each card has
-its own **Reset This Player** (clears that player's history, with a
-confirmation prompt); **Reset Game (All Players)** does the same for all
-three at once and restarts the match at Player One, Game 1 (the same action
-as **Play Again** on the Final Results screen, and as picking a "Best of"
-value mid-match). **Turn History** lists every game the active player has
-played so far — picks used and that game's total — so results can be
-compared game by game, not just as one combined figure.
+its own **Reset This Player** (a total wipe for that player — digs, workshop
+and estate — with a confirmation prompt); **New Dig Season (All Players)**
+starts a fresh season for all three at once and restarts the match at Player
+One, Game 1 (the same action as **Play Again** on the Final Results screen,
+and as picking a "Best of" value mid-match). **Turn History** lists every
+game the active player has played so far — picks used and that game's
+total — so results can be compared game by game, not just as one combined
+figure.
 
-Records live in a flat-file JSON database — one object keyed by player, each
-holding an ordered array of turn records — persisted to `localStorage`, and
-portable via **Export Database** / **Import Database** on the Dig Grid page,
-which write and read that same JSON structure as an actual `.json` file.
+Records live in a flat-file JSON database — one object keyed by player —
+persisted to `localStorage`, and portable via **Export Database** / **Import
+Database** on the Dig Grid page, which write and read that same JSON
+structure as an actual `.json` file. Each player record holds an ordered
+array of turn records plus four counter ledgers that make the three games
+add up:
+
+| Field | Holds |
+| --- | --- |
+| `turns` | every dig, by game, by type |
+| `spent` | raw resources consumed by crafting |
+| `crafted` | goods made, ever |
+| `itemsSpent` | goods consumed by housing |
+| `built` | buildings standing |
+
+A wallet is always a subtraction over those — available resources are
+`aggregate(turns) − spent`, available goods are `crafted − itemsSpent` — so
+no balance is ever stored directly and none can drift. Both spending calls
+re-check affordability against the freshly loaded record before writing, so
+a stale button in a second tab can't overdraw a wallet into the negative,
+and anything read back from storage is rebuilt through `sanitizeTally()`,
+which drops unknown keys and clamps every count to a non-negative whole
+number.
 
 **Collection never carries over from one deployment to the next.**
 `js/database.js` stamps every saved game with a `BUILD_ID` constant; on
@@ -102,14 +205,15 @@ deployment it was saved under. **Whoever ships a future update that should
 reset every player's progress must change `BUILD_ID` in `js/database.js`** —
 that's the one thing that has to be remembered by hand; everything else
 about the reset is automatic. Game rules (payouts, spawn ratio, the 10-pick
-cap) live in the code itself, never in storage, so no reset ever touches
-them.
+cap, recipe and building costs) live in the code itself, never in storage,
+so no reset ever touches them.
 
 - `js/database.js` — the flat-file database: load/save, per-turn digs,
   the Player One → Two → Three → next-game match state and advancement,
-  resetting the current turn, per-player reset, resetting the whole match
-  (optionally choosing a new "Best of" length), lifetime aggregation, file
-  export/import
+  the recipe and building tables, crafting/building and their wallet
+  arithmetic, resetting the current turn, per-player reset, starting a new
+  season (optionally choosing a new "Best of" length), lifetime aggregation,
+  file export/import
 
 ## Biggest Riser
 

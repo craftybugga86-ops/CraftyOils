@@ -4,6 +4,7 @@
   --panel-border: #3a3f47;
   --gold: #ffd166;
   --oil: #6b4a2f;
+  --dim: #9aa0a6;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -63,7 +64,7 @@ body {
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 260px;
+  max-width: 300px;
 }
 
 .menu-btn {
@@ -93,6 +94,39 @@ body {
 .menu-btn.primary:hover {
   background: #ffdd8a;
 }
+
+/* The three games get taller buttons than the utility ones, so the menu
+   reads as "here are the games, and below them the rest". */
+.menu-btn.game {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 12px 16px;
+}
+.game-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.game-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.game-sub {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--dim);
+}
+.menu-btn.game.primary .game-sub { color: #6b5320; }
+
+.modal h3 {
+  margin: 16px 0 6px;
+  font-size: 0.95rem;
+  color: #e8c990;
+}
+.modal h3:first-of-type { margin-top: 12px; }
 
 .overlay {
   position: fixed;

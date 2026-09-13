@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crafty Housing</title>
+<link rel="stylesheet" href="css/workshop.css">
+<script src="js/error-banner.js"></script>
+</head>
+<body>
+
+<div class="page">
+  <a class="back-link" href="index.html">← Menu</a>
+
+  <h1>🏘️ Crafty Housing</h1>
+  <p class="sub">Spend the goods you made in <a href="crafting.html">Crafty Crafting</a> on
+  somewhere to live. Every building stands for good and is worth prestige — the bigger
+  the build, the bigger the score.</p>
+
+  <div class="player-picker" id="playerPicker"></div>
+
+  <div class="wallet">
+    <h2>Crafted goods available</h2>
+    <div class="wallet-chips" id="itemWallet"></div>
+  </div>
+
+  <div class="card-grid" id="buildingGrid"></div>
+
+  <div class="panel">
+    <div class="headline">
+      <h2>Your Estate <span class="sub">— everything standing</span></h2>
+      <span class="headline-value" id="prestigeValue">0</span>
+    </div>
+    <ul class="ledger" id="builtLedger"></ul>
+    <p class="empty-note" id="builtEmpty" hidden>Nothing built yet. Craft bricks and windows in
+    <a href="crafting.html">Crafty Crafting</a>, then raise your first tent above.</p>
+  </div>
+</div>
+
+<script src="js/database.js"></script>
+<script src="js/workshop.js"></script>
+<script src="js/housing.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crafty Crafting</title>
+<link rel="stylesheet" href="css/workshop.css">
+<script src="js/error-banner.js"></script>
+</head>
+<body>
+
+<div class="page">
+  <a class="back-link" href="index.html">← Menu</a>
+
+  <h1>🔨 Crafty Crafting</h1>
+  <p class="sub">Turn what you dug up in <a href="dig-grid.html">Crafty Oils</a> into
+  building goods. Each craft spends raw resources for good — what you make here is
+  what <a href="housing.html">Crafty Housing</a> builds with.</p>
+
+  <div class="player-picker" id="playerPicker"></div>
+
+  <div class="wallet">
+    <h2>Raw resources available</h2>
+    <div class="wallet-chips" id="resourceWallet"></div>
+  </div>
+
+  <div class="card-grid" id="recipeGrid"></div>
+
+  <div class="panel">
+    <h2>Workshop <span class="sub">— goods made, and how many are still unbuilt</span></h2>
+    <ul class="ledger" id="craftedLedger"></ul>
+    <p class="empty-note" id="craftedEmpty" hidden>Nothing crafted yet. Dig up resources in
+    <a href="dig-grid.html">Crafty Oils</a>, then spend them above.</p>
+  </div>
+</div>
+
+<script src="js/database.js"></script>
+<script src="js/workshop.js"></script>
+<script src="js/crafting.js"></script>
+
+</body>
+</html>

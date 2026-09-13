@@ -1,20 +1,21 @@
-# Crafty Oils — Android
+# Crafty Works — Android
 
-A minimal native wrapper around the Crafty Oils web game: a single
-`WebView` (see `MainActivity.java`) loading the game straight out of the
-app's own assets (`app/src/main/assets/`, a copy of the repo's `index.html`,
-`dig-grid.html`, `css/`, and `js/`). No network permission is requested —
-everything, including the Collection/turn-history database, runs and
-persists entirely on-device via the WebView's local storage.
+A minimal native wrapper around the Crafty Works web games: a single
+`WebView` (see `MainActivity.java`) loading them straight out of the app's
+own assets (`app/src/main/assets/`, a copy of the repo's `index.html`,
+`dig-grid.html`, `crafting.html`, `housing.html`, `css/`, and `js/`). No
+network permission is requested — everything, including the
+Collection/turn-history database, runs and persists entirely on-device via
+the WebView's local storage.
 
 ## Keeping the assets in sync
 
-The web game itself is the source of truth. After changing anything at the
-repo root (`index.html`, `dig-grid.html`, `css/`, `js/`), copy the updated
+The web games themselves are the source of truth. After changing anything at
+the repo root (the four `.html` pages, `css/`, `js/`), copy the updated
 files into `app/src/main/assets/` before rebuilding:
 
 ```sh
-cp ../index.html ../dig-grid.html app/src/main/assets/
+cp ../index.html ../dig-grid.html ../crafting.html ../housing.html app/src/main/assets/
 cp -r ../css ../js app/src/main/assets/
 ```
 

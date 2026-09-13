@@ -10,11 +10,12 @@ const GRID_SIZE = 9;
 const MULTIPLIERS = { dirt: 1, rock: 3, oilwell: 10 };
 
 // How often each type spawns, as parts of a whole — dirt : rock : oilwell
-// = 5 : 3 : 1, so dirt turns up roughly 5x as often as an oil well.
+// = 1 : 3 : 5, so an oil well turns up roughly 5x as often as dirt, making
+// dirt the scarce one that crafting bottlenecks on.
 const SPAWN_WEIGHTS = [
-  { type: "dirt", weight: 5 },
+  { type: "dirt", weight: 1 },
   { type: "rock", weight: 3 },
-  { type: "oilwell", weight: 1 },
+  { type: "oilwell", weight: 5 },
 ];
 const SPAWN_TOTAL_WEIGHT = SPAWN_WEIGHTS.reduce((sum, w) => sum + w.weight, 0);
 const MAX_DIGS_PER_TURN = Database.MAX_DIGS_PER_TURN;
@@ -185,7 +186,7 @@ function renderCollection() {
   collectionPlayersEl.querySelectorAll("[data-reset-player]").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.resetPlayer;
-      if (!confirm(`Clear ${Database.PLAYER_LABELS[id]}'s entire history? This can't be undone.`)) return;
+      if (!confirm(`Clear ${Database.PLAYER_LABELS[id]}'s entire history — digs, crafted goods and buildings? This can't be undone.`)) return;
       Database.resetPlayer(id);
       if (id === activePlayerId()) {
         gridsByPlayer[id] = createGridData();
@@ -390,15 +391,15 @@ resetTurnBtn.addEventListener("click", () => {
   refreshAll();
 });
 
-// Wipes everything and drops back to the pre-game setup step, so the next
-// match always starts with an explicit "Best of" choice rather than
-// silently resuming the old length.
+// Starts a fresh dig season and drops back to the pre-game setup step, so
+// the next match always starts with an explicit "Best of" choice rather
+// than silently resuming the old length.
 function resetGame() {
   const db = Database.load();
   const hasProgress = Database.PLAYERS.some(id =>
     db[id].turns.some(turn => Database.turnDigCount(turn) > 0)
   );
-  if (hasProgress && !confirm("Reset the whole game? This wipes Player One, Two, and Three's entire history. This can't be undone.")) {
+  if (hasProgress && !confirm("Start a new dig season? Player One, Two, and Three's dig history and unspent resources all go back to zero. Crafted goods and buildings are kept.")) {
     return;
   }
   Database.resetAll();

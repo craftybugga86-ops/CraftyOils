@@ -1,7 +1,8 @@
-// Flat-file database for Crafty Oils: one JSON record per player, holding a
-// turn-by-turn history of dug-resource counts and totals by type. Persisted
-// to localStorage as a single blob for the browser session, and
-// exportable/importable as an actual .json file for portability.
+// Flat-file database shared by every Crafty game: one JSON record per
+// player, holding a turn-by-turn history of resources dug in Crafty Oils,
+// plus what Crafty Crafting has turned those into and what Crafty Housing
+// has built out of that. Persisted to localStorage as a single blob for the
+// browser session, and exportable/importable as an actual .json file.
 const Database = (() => {
   const STORAGE_KEY = "craftyoils.db";
   const EXPORT_FILENAME = "craftyoils-database.json";
@@ -10,7 +11,7 @@ const Database = (() => {
   // (a new commit changes it automatically — see ensureFreshBuild below).
   // Collection/turn data never survives past a build it wasn't saved under,
   // so a code deployment can never inherit a previous deployment's state.
-  const BUILD_ID = "2026-09-12T04";
+  const BUILD_ID = "2026-09-13T01";
   const BUILD_KEY = "craftyoils.buildId";
 
   // Wipes any saved game data the instant it's from a different build than
@@ -47,16 +48,68 @@ const Database = (() => {
     oilwell: { icon: "🛢️", label: "Oil Well" },
   };
 
+  // What Crafty Crafting can turn raw resources into. Costs stay small on
+  // purpose: one Crafty Oils game only gives each player ten picks, so a
+  // recipe priced in dozens would never actually be reachable.
+  const RECIPES = {
+    brick:  { icon: "🧱", label: "Brick",      cost: { dirt: 1, rock: 1 } },
+    gear:   { icon: "⚙️", label: "Gear",       cost: { rock: 2 } },
+    barrel: { icon: "🛢️", label: "Barrel",     cost: { oilwell: 3 } },
+    window: { icon: "🪟", label: "Window",     cost: { dirt: 1, oilwell: 2 } },
+    beam:   { icon: "🔩", label: "Steel Beam", cost: { rock: 2, oilwell: 3 } },
+  };
+
+  // What Crafty Housing can build out of those crafted goods, and the
+  // prestige each finished building is worth.
+  const BUILDINGS = {
+    tent:   { icon: "🏕️", label: "Tent",   prestige: 50,   cost: { brick: 2 } },
+    shack:  { icon: "🛖", label: "Shack",  prestige: 120,  cost: { brick: 3, window: 1 } },
+    house:  { icon: "🏠", label: "House",  prestige: 300,  cost: { brick: 5, window: 2, beam: 1 } },
+    villa:  { icon: "🏡", label: "Villa",  prestige: 650,  cost: { brick: 8, window: 3, beam: 2, gear: 2 } },
+    estate: { icon: "🏰", label: "Estate", prestige: 1200, cost: { brick: 12, window: 5, beam: 4, gear: 3, barrel: 2 } },
+  };
+
+  const RESOURCE_IDS = Object.keys(TYPE_INFO);
+  const ITEM_IDS = Object.keys(RECIPES);
+  const BUILDING_IDS = Object.keys(BUILDINGS);
+
+  function emptyTally(keys) {
+    const tally = {};
+    keys.forEach(key => { tally[key] = 0; });
+    return tally;
+  }
+
+  // Rebuilds a counter map from possibly-untrusted storage: unknown keys are
+  // dropped and every value lands as a non-negative whole number, so a
+  // hand-edited or corrupt import can't push a balance negative.
+  function sanitizeTally(raw, keys) {
+    const tally = emptyTally(keys);
+    keys.forEach(key => {
+      const n = Math.floor(Number(raw && raw[key]));
+      if (Number.isFinite(n) && n > 0) tally[key] = n;
+    });
+    return tally;
+  }
+
   function emptyTurn(turnNumber) {
     const turn = { turnNumber };
-    Object.keys(TYPE_INFO).forEach(type => {
+    RESOURCE_IDS.forEach(type => {
       turn[type] = { count: 0, total: 0 };
     });
     return turn;
   }
 
+  // Beyond the dig history, a player carries three running ledgers: raw
+  // resources already consumed by crafting, goods crafted (and how many of
+  // those housing has since consumed), and buildings standing.
   function emptyPlayerRecord() {
-    return { turns: [emptyTurn(1)] };
+    return {
+      turns: [emptyTurn(1)],
+      spent: emptyTally(RESOURCE_IDS),
+      crafted: emptyTally(ITEM_IDS),
+      itemsSpent: emptyTally(ITEM_IDS),
+      built: emptyTally(BUILDING_IDS),
+    };
   }
 
   // Whose turn it is right now (Player One -> Two -> Three, repeating for
@@ -101,7 +154,7 @@ const Database = (() => {
     return {
       turns: raw.turns.map((rawTurn, i) => {
         const turn = emptyTurn(Number(rawTurn.turnNumber) || i + 1);
-        Object.keys(TYPE_INFO).forEach(type => {
+        RESOURCE_IDS.forEach(type => {
           if (rawTurn[type]) {
             turn[type] = {
               count: Number(rawTurn[type].count) || 0,
@@ -111,6 +164,10 @@ const Database = (() => {
         });
         return turn;
       }),
+      spent: sanitizeTally(raw.spent, RESOURCE_IDS),
+      crafted: sanitizeTally(raw.crafted, ITEM_IDS),
+      itemsSpent: sanitizeTally(raw.itemsSpent, ITEM_IDS),
+      built: sanitizeTally(raw.built, BUILDING_IDS),
     };
   }
 
@@ -230,6 +287,8 @@ const Database = (() => {
     return db;
   }
 
+  // A total wipe for one player — unlike resetAll, this clears their
+  // workshop and estate too.
   function resetPlayer(playerId) {
     const db = load();
     db[playerId] = emptyPlayerRecord();
@@ -237,21 +296,39 @@ const Database = (() => {
     return db;
   }
 
-  // Wipes everything and returns to the pre-game setup step (started:
-  // false) — nothing to dig until a match length is chosen again via
-  // startNewMatch(). Keeps whatever length was last selected as the
+  // A fresh dig season laid on top of what everyone has already made: dig
+  // history and the raw-resource ledger it feeds both reset (they have to
+  // move together — clearing turns while keeping `spent` would leave a
+  // player owing resources they no longer have), while crafted goods and
+  // finished buildings carry across, so an estate is built up over several
+  // seasons rather than having to be funded out of a single match.
+  function freshSeason(totalGames) {
+    const previous = load();
+    const db = emptyDb(totalGames || previous.__match__.totalGames);
+    PLAYERS.forEach(id => {
+      db[id].crafted = { ...previous[id].crafted };
+      db[id].itemsSpent = { ...previous[id].itemsSpent };
+      db[id].built = { ...previous[id].built };
+    });
+    return db;
+  }
+
+  // Starts a fresh dig season and returns to the pre-game setup step
+  // (started: false) — nothing to dig until a match length is chosen again
+  // via startNewMatch(). Keeps whatever length was last selected as the
   // pre-highlighted default, unless a new one is given.
   function resetAll(totalGames) {
-    const previous = load().__match__.totalGames;
-    const db = emptyDb(totalGames || previous);
+    const db = freshSeason(totalGames);
     save(db);
     return db;
   }
 
   // Actually begins play at the given length (1, 3, or 5 games) — this is
-  // the only thing that ever makes the board and controls appear.
+  // the only thing that ever makes the board and controls appear. Like
+  // resetAll, it opens a new dig season without touching the workshop or
+  // estate those earlier seasons paid for.
   function startNewMatch(totalGames) {
-    const db = emptyDb(totalGames);
+    const db = freshSeason(totalGames);
     db.__match__.started = true;
     save(db);
     return db;
@@ -272,6 +349,83 @@ const Database = (() => {
 
   function grandTotal(playerRecord) {
     return Object.values(aggregate(playerRecord)).reduce((sum, t) => sum + t.total, 0);
+  }
+
+  // Raw resources dug but not yet consumed by crafting — the wallet Crafty
+  // Crafting spends from. Dug totals only ever grow, so a balance is
+  // always "everything mined so far, minus everything already used".
+  function availableResources(playerRecord) {
+    const agg = aggregate(playerRecord);
+    const available = {};
+    RESOURCE_IDS.forEach(type => {
+      available[type] = agg[type].count - playerRecord.spent[type];
+    });
+    return available;
+  }
+
+  // Crafted goods not yet consumed by housing — the wallet Crafty Housing
+  // spends from.
+  function availableItems(playerRecord) {
+    const available = {};
+    ITEM_IDS.forEach(id => {
+      available[id] = playerRecord.crafted[id] - playerRecord.itemsSpent[id];
+    });
+    return available;
+  }
+
+  // Whether every line of a cost is covered by the matching wallet.
+  function canAfford(cost, wallet) {
+    return Object.entries(cost).every(([id, needed]) => wallet[id] >= needed);
+  }
+
+  function canCraft(playerRecord, itemId) {
+    return !!RECIPES[itemId] && canAfford(RECIPES[itemId].cost, availableResources(playerRecord));
+  }
+
+  function canBuild(playerRecord, buildingId) {
+    return !!BUILDINGS[buildingId] && canAfford(BUILDINGS[buildingId].cost, availableItems(playerRecord));
+  }
+
+  // Spends the recipe's raw resources and adds one of the item. No-ops
+  // (crafted: false) if the player can't currently afford it, so a stale
+  // button in an open tab can never overdraw a wallet.
+  function craftItem(playerId, itemId) {
+    const db = load();
+    const record = db[playerId];
+    if (!canCraft(record, itemId)) return { db, crafted: false };
+
+    Object.entries(RECIPES[itemId].cost).forEach(([type, needed]) => {
+      record.spent[type] += needed;
+    });
+    record.crafted[itemId] += 1;
+    save(db);
+    return { db, crafted: true };
+  }
+
+  // Spends the building's crafted goods and raises one of the building.
+  function buildStructure(playerId, buildingId) {
+    const db = load();
+    const record = db[playerId];
+    if (!canBuild(record, buildingId)) return { db, built: false };
+
+    Object.entries(BUILDINGS[buildingId].cost).forEach(([itemId, needed]) => {
+      record.itemsSpent[itemId] += needed;
+    });
+    record.built[buildingId] += 1;
+    save(db);
+    return { db, built: true };
+  }
+
+  // What a player's standing buildings are worth all together.
+  function prestige(playerRecord) {
+    return BUILDING_IDS.reduce(
+      (sum, id) => sum + playerRecord.built[id] * BUILDINGS[id].prestige,
+      0
+    );
+  }
+
+  function totalBuilt(playerRecord) {
+    return BUILDING_IDS.reduce((sum, id) => sum + playerRecord.built[id], 0);
   }
 
   function exportFile() {
@@ -307,11 +461,14 @@ const Database = (() => {
 
   return {
     PLAYERS, PLAYER_LABELS, TYPE_INFO, MAX_DIGS_PER_TURN,
+    RECIPES, BUILDINGS,
     load, save,
     currentTurn, turnDigCount, turnTotal, bestTurn,
     activePlayer, isMatchOver, isMatchStarted, advanceMatch,
     addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll, startNewMatch,
     aggregate, grandTotal,
+    availableResources, availableItems, canCraft, canBuild,
+    craftItem, buildStructure, prestige, totalBuilt,
     exportFile, importFile,
   };
 })();

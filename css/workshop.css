@@ -1,0 +1,251 @@
+/* Shared styling for the two "spend what you've gathered" pages —
+   Crafty Crafting and Crafty Housing. Both are the same shape: pick a
+   player, look at a wallet, then spend it on cards. */
+:root {
+  --bg: #1b1f24;
+  --panel-bg: #2b2f36;
+  --panel-border: #3a3f47;
+  --gold: #ffd166;
+  --dim: #9aa0a6;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 12px;
+}
+.page {
+  width: 100%;
+  max-width: 520px;
+}
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--dim);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.back-link:hover { color: var(--gold); }
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 4px;
+  letter-spacing: 0.5px;
+}
+.sub {
+  color: var(--dim);
+  font-size: 0.9rem;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+.sub a { color: var(--gold); }
+
+.player-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.player-btn {
+  flex: 1;
+  min-width: 92px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  color: #eee;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.player-btn:hover { border-color: var(--gold); }
+.player-btn.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #222;
+}
+
+.wallet {
+  background: #14171b;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+.wallet h2 {
+  font-size: 0.85rem;
+  margin: 0 0 10px;
+  color: var(--gold);
+  font-weight: 700;
+}
+.wallet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wallet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: var(--panel-bg);
+  font-size: 0.8rem;
+}
+.wallet-chip.empty { opacity: 0.4; }
+.wallet-count {
+  color: var(--gold);
+  font-weight: 700;
+}
+.wallet-chip.empty .wallet-count { color: var(--dim); }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+@media (max-width: 480px) {
+  .card-grid { grid-template-columns: 1fr; }
+}
+.make-card {
+  background: #14171b;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+.make-card.affordable { border-color: #6b5a2f; }
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.card-icon { font-size: 1.5rem; line-height: 1; }
+.card-title {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.card-meta {
+  display: block;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--dim);
+  margin-top: 2px;
+}
+.card-owned {
+  font-size: 0.75rem;
+  color: var(--gold);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cost-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  flex: 1;
+}
+.cost-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.8rem;
+  color: #d7d7d7;
+}
+.cost-line .cost-label { flex: 1; }
+.cost-have { color: var(--dim); }
+.cost-line.short .cost-have { color: #d9694f; }
+.make-btn {
+  background: var(--gold);
+  color: #222;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+}
+.make-btn:hover:not(:disabled) { background: #ffdd8a; }
+.make-btn:disabled {
+  background: var(--panel-bg);
+  color: var(--dim);
+  cursor: not-allowed;
+}
+
+.panel {
+  background: #14171b;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+.panel h2 {
+  font-size: 1rem;
+  margin: 0 0 12px;
+  color: var(--gold);
+  font-weight: 700;
+}
+.panel h2 .sub {
+  display: inline;
+  font-size: 0.8rem;
+  font-weight: 400;
+  margin: 0;
+}
+.ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ledger li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--panel-border);
+  font-size: 0.9rem;
+}
+.ledger li:first-child { border-top: none; }
+.ledger-icon { font-size: 18px; width: 24px; text-align: center; }
+.ledger-label { flex: 1; }
+.ledger-count {
+  color: var(--gold);
+  font-weight: 700;
+}
+.empty-note {
+  color: var(--dim);
+  font-size: 0.85rem;
+  margin: 0;
+  line-height: 1.5;
+}
+.empty-note a { color: var(--gold); }
+
+.headline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.headline-value {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+.flash {
+  animation: flash-pop 0.4s ease;
+}
+@keyframes flash-pop {
+  0% { transform: scale(0.96); }
+  55% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}

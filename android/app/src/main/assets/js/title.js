@@ -41,6 +41,10 @@ function renderCollection() {
       ? `🛢️ Biggest Riser: ${best.total} (Turn ${best.turnNumber})`
       : `🛢️ Biggest Riser: 0`;
 
+    const crafted = Object.values(record.crafted).reduce((sum, n) => sum + n, 0);
+    const built = Database.totalBuilt(record);
+    const prestige = Database.prestige(record);
+
     const card = document.createElement("div");
     card.className = "player-collection";
     card.innerHTML =
@@ -49,7 +53,10 @@ function renderCollection() {
         `<span class="player-collection-total">${Database.grandTotal(record)}</span>` +
       `</div>` +
       `<ul class="collection-list">${rows}</ul>` +
-      `<div class="player-collection-riser">${riserLine}</div>`;
+      `<div class="player-collection-riser">${riserLine}</div>` +
+      `<div class="player-collection-riser">` +
+        `🔨 Crafted: ${crafted} · 🏘️ Built: ${built} · 🏆 Prestige: ${prestige}` +
+      `</div>`;
     collectionPlayersEl.appendChild(card);
   });
 }
