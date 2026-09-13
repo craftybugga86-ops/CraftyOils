@@ -37,8 +37,11 @@ const totalGamesLabelEl = document.getElementById("totalGamesLabel");
 const turnBarEl = document.querySelector(".turn-bar");
 const turnInfoEl = document.getElementById("turnInfo");
 const resetTurnBtn = document.getElementById("resetTurnBtn");
-const passBanner = document.getElementById("passBanner");
-const passText = document.getElementById("passText");
+const handoffPanel = document.getElementById("handoffPanel");
+const handoffDone = document.getElementById("handoffDone");
+const handoffPlayer = document.getElementById("handoffPlayer");
+const handoffRound = document.getElementById("handoffRound");
+const startTurnBtn = document.getElementById("startTurnBtn");
 const collectionPlayersEl = document.getElementById("collectionPlayers");
 const turnHistoryList = document.getElementById("turnHistoryList");
 const exportBtn = document.getElementById("exportBtn");
@@ -62,7 +65,10 @@ const lastRiserByPlayer = {};
 // only in memory for this session (a reload starts everyone over).
 const gridsByPlayer = {};
 
-let passBannerTimer = null;
+// Who just handed the device on, and what they scored — shown on the
+// hand-off screen. Only meaningful for a pass that happened in this
+// session, so a reload mid-hand-off simply omits that line.
+let lastFinished = null;
 
 // Cryptographically strong random integer in [min, max], with
 // rejection sampling to avoid modulo bias — gives a much more
@@ -121,11 +127,22 @@ function playerRecord() {
   return Database.load()[activePlayerId()];
 }
 
-function showPassBanner(message) {
-  passText.textContent = message;
-  passBanner.hidden = false;
-  clearTimeout(passBannerTimer);
-  passBannerTimer = setTimeout(() => { passBanner.hidden = true; }, 3500);
+// The hand-off screen: what just happened, then who's up and which game
+// they're playing, held there until they tap Start Turn.
+function renderHandoff() {
+  const db = Database.load();
+  const match = db.__match__;
+
+  if (lastFinished) {
+    handoffDone.textContent =
+      `${lastFinished.label} finished Game ${lastFinished.round} with ${lastFinished.total}.`;
+    handoffDone.hidden = false;
+  } else {
+    handoffDone.hidden = true;
+  }
+
+  handoffPlayer.textContent = Database.PLAYER_LABELS[Database.activePlayer(db)];
+  handoffRound.textContent = `Game ${match.round} of ${match.totalGames}`;
 }
 
 // Refreshes the turn indicator and locks digging once the turn's cap is hit.
@@ -230,23 +247,28 @@ function renderRiser() {
   lastRiserByPlayer[playerId] = best.total;
 }
 
-// Three states: nothing chosen yet (pre-game setup), a live match in
-// progress, or every game finished (final results).
+// Four states: nothing chosen yet (pre-game setup), waiting for the player
+// who's up to tap Start Turn, a turn actually being dug, or every game
+// finished (final results).
 function applyMatchVisibility() {
   const db = Database.load();
   const started = Database.isMatchStarted(db);
   const over = Database.isMatchOver(db);
-  const inProgress = started && !over;
+  const awaiting = Database.isAwaitingStart(db);
+  const digging = started && !over && !awaiting;
 
   pregamePanel.hidden = started;
-  nowPlayingBox.hidden = !inProgress;
-  turnBarEl.hidden = !inProgress;
-  statsBox.hidden = !inProgress;
-  riserBadge.hidden = !inProgress;
-  grid.hidden = !inProgress;
-  controlsEl.hidden = !inProgress;
+  handoffPanel.hidden = !(started && !over && awaiting);
+  nowPlayingBox.hidden = !digging;
+  turnBarEl.hidden = !digging;
+  statsBox.hidden = !digging;
+  riserBadge.hidden = !digging;
+  grid.hidden = !digging;
+  controlsEl.hidden = !digging;
   gameOverPanel.hidden = !(started && over);
+
   if (started && over) renderGameOver();
+  if (started && !over && awaiting) renderHandoff();
 }
 
 function renderGameOver() {
@@ -273,32 +295,24 @@ function renderGameOver() {
 }
 
 // If the active player has just used their last pick, hand control to the
-// next player in order; once Player Three finishes, the match ends. Calls
+// next player in order; once Player Three finishes the final game, the
+// match ends. The next player's board isn't drawn here — advanceMatch
+// parks the game on the hand-off screen, and Start Turn draws it. Calls
 // refreshAll() again after advancing so every panel reflects the new state
-// (bounded recursion — at most two more players to advance through).
+// (bounded: the nested call returns at the awaiting check below).
 function maybeAdvanceMatch() {
-  if (Database.isMatchOver(Database.load())) return;
+  const db = Database.load();
+  if (Database.isMatchOver(db) || Database.isAwaitingStart(db)) return;
 
-  const playerId = activePlayerId();
-  const used = Database.turnDigCount(Database.currentTurn(playerRecord()));
-  if (used < MAX_DIGS_PER_TURN) return;
+  const turn = Database.currentTurn(playerRecord());
+  if (Database.turnDigCount(turn) < MAX_DIGS_PER_TURN) return;
 
-  const finishedLabel = Database.PLAYER_LABELS[playerId];
-  const roundBefore = Database.load().__match__.round;
+  lastFinished = {
+    label: Database.PLAYER_LABELS[activePlayerId()],
+    round: db.__match__.round,
+    total: Database.turnTotal(turn),
+  };
   Database.advanceMatch();
-  const after = Database.load();
-
-  if (after.__match__.over) {
-    showPassBanner(`${finishedLabel}'s turn is over. Game over!`);
-  } else {
-    const nextLabel = Database.PLAYER_LABELS[activePlayerId()];
-    showPassBanner(
-      after.__match__.round > roundBefore
-        ? `Game ${roundBefore} complete! Starting Game ${after.__match__.round} — now playing ${nextLabel}.`
-        : `${finishedLabel}'s turn is over — now playing ${nextLabel}.`
-    );
-    renderGrid();
-  }
   refreshAll();
 }
 
@@ -360,6 +374,15 @@ function renderGrid() {
   countEl.textContent = revealedCount;
 }
 
+// The only thing that puts a board on screen once a turn has been handed
+// over — until it's tapped, the previous player's picks stay the last
+// thing shown and the device can change hands safely.
+startTurnBtn.addEventListener("click", () => {
+  Database.beginTurn();
+  renderGrid();
+  refreshAll();
+});
+
 resetBtn.addEventListener("click", () => {
   gridsByPlayer[activePlayerId()] = createGridData();
   renderGrid();
@@ -405,21 +428,20 @@ function resetGame() {
   }
   Database.resetAll();
   Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
-  passBanner.hidden = true;
+  lastFinished = null;
   refreshAll();
 }
 
 resetGameBtn.addEventListener("click", resetGame);
 playAgainBtn.addEventListener("click", resetGame);
 
-// The only thing that actually begins play — picking a length here is what
-// makes the board and controls appear.
+// Picking a length here is what begins the match — it hands straight to
+// the hand-off screen, so Player One taps Start Turn to see their board.
 gamesButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     Database.startNewMatch(Number(btn.dataset.games));
     Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
-    passBanner.hidden = true;
-    renderGrid();
+    lastFinished = null;
     refreshAll();
   });
 });
@@ -439,10 +461,11 @@ importInput.addEventListener("change", () => {
     file,
     () => {
       const db = Database.load();
-      if (Database.isMatchStarted(db) && !Database.isMatchOver(db)) {
+      if (Database.isMatchStarted(db) && !Database.isMatchOver(db) && !Database.isAwaitingStart(db)) {
         gridsByPlayer[activePlayerId()] = createGridData();
         renderGrid();
       }
+      lastFinished = null;
       refreshAll();
     },
     () => alert("Couldn't read that file — make sure it's a Crafty Oils database export.")
@@ -451,7 +474,7 @@ importInput.addEventListener("change", () => {
 });
 
 const initialDb = Database.load();
-if (Database.isMatchStarted(initialDb) && !Database.isMatchOver(initialDb)) {
+if (Database.isMatchStarted(initialDb) && !Database.isMatchOver(initialDb) && !Database.isAwaitingStart(initialDb)) {
   renderGrid();
 }
 refreshAll();

@@ -61,22 +61,30 @@ sees what tiles the others have revealed, or is influenced by their layout.
 **It's a strict, automatic three-player match**, not free player-switching,
 and **no tile is ever shown until a match length is chosen**. Landing on the
 page (or resetting) shows a "Choose Your Match" setup step — just a **"Best
-of 1, 3, or 5"** button group, no board, no stats, nothing else — and
-picking one is what actually starts play: only then does the grid, turn
-info, and everything else appear. One full Player One → Two → Three cycle is
-one game, repeated for however many games were chosen, tallying every
-player's score across all of them.
+of 1, 3, or 5"** button group, no board, no stats, nothing else. One full
+Player One → Two → Three cycle is one game, repeated for however many games
+were chosen, tallying every player's score across all of them.
 
-Once started, a "Now Playing" indicator shows whose turn it is and which
-game the match is on (e.g. "Game 2 of 3") — there's no dropdown, because
-nobody chooses; control just isn't given to anyone but the active player.
-The instant that player uses their 10th pick (or you use **Show All** to
-fill the rest of their turn at once), it **automatically hands off to the
-next player** — a brief banner announces the pass, and names the new game
-number when one starts — with no button to click and no way to skip someone
-or go out of order. **Reset Turn** lets the *active* player only redo their
-own turn from scratch (0/10 picks, fresh board); **Reset Grid** just
-reshuffles their current board without touching picks used.
+Because all three share one device, **no board is ever on screen without
+someone having asked for it**. Picking a match length doesn't deal the
+first hand — it goes to a **hand-off screen**, and so does the end of every
+turn after it. That screen is the game's notification: it names what the
+player who just finished scored and in which game, then, in large type, who
+is up now and which game they're playing (e.g. "Player Two — Game 2 of 3").
+Nothing is dug until they tap **Start Turn**, which is the only control
+that puts a board back on screen. So the instant a player uses their 10th
+pick (or uses **Show All** to spend the rest of their turn at once) their
+board is put away rather than being replaced under them, and the device can
+change hands with nobody seeing anyone else's grid. Control still passes
+strictly in order, with no way to skip someone or choose who plays.
+
+That gate is stored, not just drawn, so reloading mid-hand-off still comes
+back to the hand-off screen rather than dropping someone into a turn they
+never started. Once a turn is under way a "Now Playing" indicator repeats
+whose it is and which game the match is on. **Reset Turn** lets the
+*active* player only redo their own turn from scratch (0/10 picks, fresh
+board); **Reset Grid** just reshuffles their current board without touching
+picks used.
 
 Once Player Three's turn ends in the final game, **the match is over**: the
 board and controls disappear, replaced by a **Final Results** screen ranking

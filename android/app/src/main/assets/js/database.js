@@ -114,14 +114,16 @@ const Database = (() => {
 
   // Whose turn it is right now (Player One -> Two -> Three, repeating for
   // `totalGames` rounds), which round that is, whether a match length has
-  // actually been chosen and started yet, and whether every round has
-  // finished for every player.
+  // actually been chosen and started yet, whether the next player still has
+  // to tap Start Turn before their board appears, and whether every round
+  // has finished for every player.
   function emptyMatch(totalGames) {
     return {
       activeIndex: 0,
       round: 1,
       totalGames: VALID_GAME_COUNTS.includes(totalGames) ? totalGames : 1,
       started: false,
+      awaitingStart: false,
       over: false,
     };
   }
@@ -141,6 +143,7 @@ const Database = (() => {
       round: Number.isInteger(round) && round >= 1 ? round : 1,
       totalGames: VALID_GAME_COUNTS.includes(totalGames) ? totalGames : 1,
       started: !!(raw && raw.started),
+      awaitingStart: !!(raw && raw.awaitingStart),
       over: !!(raw && raw.over),
     };
   }
@@ -227,6 +230,21 @@ const Database = (() => {
     return db.__match__.started;
   }
 
+  // Whether the board is held back waiting for the player who's up to tap
+  // Start Turn. Control has already passed to them at this point — this is
+  // the pause that lets the device actually change hands.
+  function isAwaitingStart(db) {
+    return db.__match__.awaitingStart && !db.__match__.over;
+  }
+
+  // The player who's up has taken the device and tapped Start Turn.
+  function beginTurn() {
+    const db = load();
+    db.__match__.awaitingStart = false;
+    save(db);
+    return db;
+  }
+
   // Hands control to the next player once the active player's turn is
   // done. After Player Three finishes a round, either the next round starts
   // (back to Player One) or, once totalGames rounds are complete, the match
@@ -252,6 +270,9 @@ const Database = (() => {
     if (db[nextId].turns.length < m.round) {
       db[nextId].turns.push(emptyTurn(m.round));
     }
+    // Hold the board until they say they're ready, so the device can change
+    // hands without the next player's board already being on screen.
+    m.awaitingStart = true;
     save(db);
     return db;
   }
@@ -330,6 +351,9 @@ const Database = (() => {
   function startNewMatch(totalGames) {
     const db = freshSeason(totalGames);
     db.__match__.started = true;
+    // Even the opening turn waits on Start Turn — whoever sets the match
+    // length isn't necessarily Player One.
+    db.__match__.awaitingStart = true;
     save(db);
     return db;
   }
@@ -464,7 +488,8 @@ const Database = (() => {
     RECIPES, BUILDINGS,
     load, save,
     currentTurn, turnDigCount, turnTotal, bestTurn,
-    activePlayer, isMatchOver, isMatchStarted, advanceMatch,
+    activePlayer, isMatchOver, isMatchStarted, isAwaitingStart,
+    advanceMatch, beginTurn,
     addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll, startNewMatch,
     aggregate, grandTotal,
     availableResources, availableItems, canCraft, canBuild,

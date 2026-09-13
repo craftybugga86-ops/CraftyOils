@@ -101,16 +101,50 @@ h1 {
   color: var(--gold);
   font-size: 1.1rem;
 }
-.pass-banner {
+/* The pause between turns: what just happened, who's up, and the only
+   control that puts the next board on screen. */
+.handoff {
   width: 100%;
   max-width: 460px;
-  margin-bottom: 16px;
-  padding: 10px 14px;
-  border: 1px solid #8a5a00;
-  border-radius: 8px;
-  background: rgba(255, 209, 102, 0.1);
+  background: #14171b;
+  border: 1px solid #6b4a2f;
+  border-radius: 10px;
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.handoff-done {
+  margin: 0 0 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--cell-border);
+  color: #9aa0a6;
+  font-size: 0.9rem;
+}
+.handoff-next {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 22px;
+}
+.handoff-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+  color: #9aa0a6;
+}
+.handoff-player {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--gold);
+  line-height: 1.1;
+}
+.handoff-round {
+  font-size: 0.9rem;
   color: #e8c990;
-  font-size: 0.85rem;
+}
+.handoff .btn-primary {
+  padding: 12px 30px;
+  font-size: 1rem;
 }
 .game-over {
   width: 100%;
