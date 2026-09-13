@@ -2,6 +2,11 @@
 
 Run it by opening `index.html` in a browser — it's the title screen and entry point.
 
+Also ships as a native Android app (a WebView wrapper around this same
+game, no network permission needed) — see `android/README.md`. The GitHub
+Actions workflow at `.github/workflows/build-android-apk.yml` builds an
+installable debug APK automatically.
+
 ## Title Screen
 
 The main menu: **Play** heads into the Dig Grid, and **Collection** /

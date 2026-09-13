@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dig Grid</title>
+<link rel="stylesheet" href="css/dig-grid.css">
+<script src="js/error-banner.js"></script>
+</head>
+<body>
+
+<a class="back-link" href="index.html">← Menu</a>
+
+<h1>⛏️ Dig Grid</h1>
+
+<div class="sub">🟫 Dirt pays 1–9, 🪨 rock pays 3–27, 🛢️ an oil well pays 10–90 — and turns up rarest, in a 5:3:1 dirt:rock:oil spawn ratio. Player One, Two, and Three each get one turn per game, in order — once a player uses all 10 picks, it automatically passes to the next.</div>
+
+<div class="pregame" id="pregamePanel">
+  <h2>Choose Your Match</h2>
+  <p class="sub">Pick how many games to play, then start digging.</p>
+  <div class="games-select" id="gamesSelect">
+    <span class="sub">Best of</span>
+    <button class="games-btn" data-games="1" type="button">1</button>
+    <button class="games-btn" data-games="3" type="button">3</button>
+    <button class="games-btn" data-games="5" type="button">5</button>
+  </div>
+</div>
+
+<div class="now-playing" id="nowPlayingBox">
+  <span class="sub">Game <span id="roundLabel">1</span> of <span id="totalGamesLabel">1</span> — Now Playing</span>
+  <span id="activePlayerLabel">Player One</span>
+</div>
+
+<div class="turn-bar">
+  <span id="turnInfo">Turn 1 — 0/10 picks used</span>
+  <button id="resetTurnBtn" class="text-btn">Reset Turn</button>
+</div>
+
+<div class="pass-banner" id="passBanner" hidden>
+  <span id="passText"></span>
+</div>
+
+<div class="stats" id="statsBox">
+  <div>Total: <span id="total">0</span></div>
+  <div>Revealed: <span id="count">0</span>/81</div>
+</div>
+
+<div class="gusher" id="gusherBadge">
+  <span class="gusher-icon">🛢️</span>
+  <span class="gusher-text">Biggest Gusher: <span id="gusherTotal">0</span><span id="gusherTurn"></span></span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="controls" id="controls">
+  <button id="resetBtn">Reset Grid</button>
+  <button id="showAllBtn">Show All</button>
+</div>
+
+<div class="game-over" id="gameOverPanel" hidden>
+  <h2>🏁 Game Over</h2>
+  <p class="sub" id="gameOverSummary">Final results:</p>
+  <ul class="final-results" id="finalResultsList"></ul>
+  <button id="playAgainBtn" class="btn-primary">Play Again</button>
+</div>
+
+<div class="collection collection-wide">
+  <h2>Collection <span class="sub">— resources dug up so far, per player</span></h2>
+  <div class="collection-players" id="collectionPlayers"></div>
+  <div class="collection-footer actions">
+    <button id="exportBtn" class="text-btn">Export Database</button>
+    <button id="importBtn" class="text-btn">Import Database</button>
+    <input type="file" id="importInput" accept="application/json" hidden>
+  </div>
+  <div class="collection-footer actions">
+    <button id="resetGameBtn" class="btn-danger">Reset Game (All Players)</button>
+  </div>
+</div>
+
+<div class="collection">
+  <h2>Turn History <span class="sub">— picks &amp; totals by turn</span></h2>
+  <ul class="turn-history-list" id="turnHistoryList"></ul>
+</div>
+
+<script src="js/database.js"></script>
+<script src="js/dig-grid.js"></script>
+
+</body>
+</html>
