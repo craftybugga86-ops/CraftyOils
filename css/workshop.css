@@ -249,3 +249,19 @@ h1 {
   55% { transform: scale(1.03); }
   100% { transform: scale(1); }
 }
+
+/* Keyboard users get the same affordance as pointer users: a visible ring
+   on whatever holds focus, and no motion for anyone who asked for none. */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

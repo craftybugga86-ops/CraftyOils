@@ -290,14 +290,6 @@ const Database = (() => {
     return { db, added: true };
   }
 
-  function startNewTurn(playerId) {
-    const db = load();
-    const nextNumber = db[playerId].turns.length + 1;
-    db[playerId].turns.push(emptyTurn(nextNumber));
-    save(db);
-    return db;
-  }
-
   // Redo the player's current turn from scratch — its digs go back to 0/
   // MAX_DIGS_PER_TURN — without touching earlier turns or the turn number.
   function resetCurrentTurn(playerId) {
@@ -490,7 +482,7 @@ const Database = (() => {
     currentTurn, turnDigCount, turnTotal, bestTurn,
     activePlayer, isMatchOver, isMatchStarted, isAwaitingStart,
     advanceMatch, beginTurn,
-    addDig, startNewTurn, resetCurrentTurn, resetPlayer, resetAll, startNewMatch,
+    addDig, resetCurrentTurn, resetPlayer, resetAll, startNewMatch,
     aggregate, grandTotal,
     availableResources, availableItems, canCraft, canBuild,
     craftItem, buildStructure, prestige, totalBuilt,

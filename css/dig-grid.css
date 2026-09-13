@@ -31,6 +31,45 @@ h1 {
   font-size: 0.9rem;
   margin-bottom: 18px;
 }
+/* Payout key: what each tile is worth and how often it shows up. Rarity is
+   the spawn ratio said in words, so the board's odds are readable without
+   a paragraph explaining them. */
+.payout-key {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 0;
+  width: 100%;
+  max-width: 460px;
+}
+.payout-key li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 6px;
+  background: #14171b;
+  border: 1px solid var(--cell-border);
+  border-radius: 8px;
+  text-align: center;
+}
+.key-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.key-pay {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.key-rarity {
+  font-size: 0.65rem;
+  color: #9aa0a6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .turn-bar {
   display: flex;
   flex-wrap: wrap;
@@ -394,6 +433,13 @@ button:hover { filter: brightness(1.05); }
   font-size: 0.8rem;
   padding: 4px 0;
 }
+.player-collection-works {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--cell-border);
+  font-size: 0.75rem;
+  color: #e8c990;
+}
 .player-collection .text-btn {
   display: inline-block;
   margin-top: 8px;
@@ -487,3 +533,19 @@ button:hover { filter: brightness(1.05); }
   text-decoration: underline;
 }
 .text-btn:hover { color: var(--gold); }
+
+/* Keyboard users get the same affordance as pointer users: a visible ring
+   on whatever holds focus, and no motion for anyone who asked for none. */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

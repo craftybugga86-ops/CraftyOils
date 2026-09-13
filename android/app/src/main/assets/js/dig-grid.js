@@ -34,6 +34,7 @@ const nowPlayingBox = document.getElementById("nowPlayingBox");
 const activePlayerLabelEl = document.getElementById("activePlayerLabel");
 const roundLabelEl = document.getElementById("roundLabel");
 const totalGamesLabelEl = document.getElementById("totalGamesLabel");
+const payoutKey = document.querySelector(".payout-key");
 const turnBarEl = document.querySelector(".turn-bar");
 const turnInfoEl = document.getElementById("turnInfo");
 const resetTurnBtn = document.getElementById("resetTurnBtn");
@@ -197,6 +198,11 @@ function renderCollection() {
         `<span class="player-collection-total">${Database.grandTotal(record)}</span>` +
       `</div>` +
       `<ul class="collection-list">${rows}</ul>` +
+      `<div class="player-collection-works">` +
+        `🔨 ${Object.values(record.crafted).reduce((sum, n) => sum + n, 0)} crafted` +
+        ` · 🏘️ ${Database.totalBuilt(record)} built` +
+        ` · 🏆 ${Database.prestige(record)}` +
+      `</div>` +
       `<button class="text-btn" data-reset-player="${id}">Reset This Player</button>`;
     collectionPlayersEl.appendChild(card);
   });
@@ -259,6 +265,7 @@ function applyMatchVisibility() {
 
   pregamePanel.hidden = started;
   handoffPanel.hidden = !(started && !over && awaiting);
+  payoutKey.hidden = !digging;
   nowPlayingBox.hidden = !digging;
   turnBarEl.hidden = !digging;
   statsBox.hidden = !digging;
@@ -377,8 +384,14 @@ function renderGrid() {
 // The only thing that puts a board on screen once a turn has been handed
 // over — until it's tapped, the previous player's picks stay the last
 // thing shown and the device can change hands safely.
+//
+// Every turn is dug on a board of its own: a player coming round again in
+// a later game would otherwise resume the grid they left behind, opening
+// their new turn on ten tiles they already dug and a stats box carrying
+// the previous game's total against a 0/10 turn bar.
 startTurnBtn.addEventListener("click", () => {
   Database.beginTurn();
+  gridsByPlayer[activePlayerId()] = createGridData();
   renderGrid();
   refreshAll();
 });
@@ -461,14 +474,16 @@ importInput.addEventListener("change", () => {
     file,
     () => {
       const db = Database.load();
+      // Every board in memory belongs to the save being replaced, so none
+      // of them survive the import.
+      Object.keys(gridsByPlayer).forEach(id => delete gridsByPlayer[id]);
       if (Database.isMatchStarted(db) && !Database.isMatchOver(db) && !Database.isAwaitingStart(db)) {
-        gridsByPlayer[activePlayerId()] = createGridData();
         renderGrid();
       }
       lastFinished = null;
       refreshAll();
     },
-    () => alert("Couldn't read that file — make sure it's a Crafty Oils database export.")
+    () => alert("Couldn't read that file — make sure it's a Crafty Works database export.")
   );
   importInput.value = "";
 });
