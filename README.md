@@ -111,12 +111,12 @@ them.
   (optionally choosing a new "Best of" length), lifetime aggregation, file
   export/import
 
-## Biggest Gusher
+## Biggest Riser
 
 A per-turn high score, themed to the drilling setting rather than a generic
 "high score": the active player's best single turn total is tracked and
-shown as a **🛢️ Biggest Gusher** badge — the total and which turn hit it
-(e.g. "Biggest Gusher: 512 (Turn 1)"). It sits next to the Dig Grid's stats,
+shown as a **🛢️ Biggest Riser** badge — the total and which turn hit it
+(e.g. "Biggest Riser: 512 (Turn 1)"). It sits next to the Dig Grid's stats,
 and appears inside each player's own card in the title screen's Collection
 modal. The Dig Grid badge gives a brief "blowout" pulse the moment a turn
 actually beats that player's previous record.

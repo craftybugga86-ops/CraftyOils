@@ -146,7 +146,7 @@ const Database = (() => {
     return Object.keys(TYPE_INFO).reduce((sum, type) => sum + turn[type].total, 0);
   }
 
-  // The player's single best turn by total — their "biggest gusher" — so a
+  // The player's single best turn by total — their "biggest riser" — so a
   // strong turn stands out rather than getting buried in the lifetime sum.
   function bestTurn(playerRecord) {
     return playerRecord.turns.reduce((best, turn) => {

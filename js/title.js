@@ -16,7 +16,7 @@ Object.entries(modals).forEach(([btnId, modal]) => {
 
 const collectionPlayersEl = document.getElementById("collectionPlayers");
 
-// Shows every player's lifetime totals and biggest gusher side by side,
+// Shows every player's lifetime totals and biggest riser side by side,
 // rather than requiring a dropdown to flip between them one at a time.
 function renderCollection() {
   const db = Database.load();
@@ -37,9 +37,9 @@ function renderCollection() {
         `</li>`;
     }).join("");
 
-    const gusherLine = best.total > 0
-      ? `🛢️ Biggest Gusher: ${best.total} (Turn ${best.turnNumber})`
-      : `🛢️ Biggest Gusher: 0`;
+    const riserLine = best.total > 0
+      ? `🛢️ Biggest Riser: ${best.total} (Turn ${best.turnNumber})`
+      : `🛢️ Biggest Riser: 0`;
 
     const card = document.createElement("div");
     card.className = "player-collection";
@@ -49,7 +49,7 @@ function renderCollection() {
         `<span class="player-collection-total">${Database.grandTotal(record)}</span>` +
       `</div>` +
       `<ul class="collection-list">${rows}</ul>` +
-      `<div class="player-collection-gusher">${gusherLine}</div>`;
+      `<div class="player-collection-riser">${riserLine}</div>`;
     collectionPlayersEl.appendChild(card);
   });
 }

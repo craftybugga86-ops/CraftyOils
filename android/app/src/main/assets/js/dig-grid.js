@@ -47,13 +47,13 @@ const gameOverPanel = document.getElementById("gameOverPanel");
 const gameOverSummary = document.getElementById("gameOverSummary");
 const finalResultsList = document.getElementById("finalResultsList");
 const playAgainBtn = document.getElementById("playAgainBtn");
-const gusherBadge = document.getElementById("gusherBadge");
-const gusherTotalEl = document.getElementById("gusherTotal");
-const gusherTurnEl = document.getElementById("gusherTurn");
+const riserBadge = document.getElementById("riserBadge");
+const riserTotalEl = document.getElementById("riserTotal");
+const riserTurnEl = document.getElementById("riserTurn");
 
-// Tracks each player's last-rendered biggest-gusher total, so we only
+// Tracks each player's last-rendered biggest-riser total, so we only
 // celebrate the moment a turn actually beats their previous record.
-const lastGusherByPlayer = {};
+const lastRiserByPlayer = {};
 
 // Each player digs their own private board: a fresh, independently random
 // layout nobody else can see or is influenced by. Keyed by player id, kept
@@ -210,22 +210,22 @@ function renderTurnHistory() {
   });
 }
 
-// The player's best single turn so far — their "biggest gusher" — with a
+// The player's best single turn so far — their "biggest riser" — with a
 // brief celebration the moment a turn actually beats their old record.
-function renderGusher() {
+function renderRiser() {
   const playerId = activePlayerId();
   const best = Database.bestTurn(playerRecord());
 
-  gusherTotalEl.textContent = best.total;
-  gusherTurnEl.textContent = best.turnNumber ? ` (Turn ${best.turnNumber})` : "";
+  riserTotalEl.textContent = best.total;
+  riserTurnEl.textContent = best.turnNumber ? ` (Turn ${best.turnNumber})` : "";
 
-  const previousBest = lastGusherByPlayer[playerId] || 0;
-  gusherBadge.classList.remove("new-record");
+  const previousBest = lastRiserByPlayer[playerId] || 0;
+  riserBadge.classList.remove("new-record");
   if (best.total > 0 && best.total > previousBest) {
-    void gusherBadge.offsetWidth; // restart the animation if it's already mid-play
-    gusherBadge.classList.add("new-record");
+    void riserBadge.offsetWidth; // restart the animation if it's already mid-play
+    riserBadge.classList.add("new-record");
   }
-  lastGusherByPlayer[playerId] = best.total;
+  lastRiserByPlayer[playerId] = best.total;
 }
 
 // Three states: nothing chosen yet (pre-game setup), a live match in
@@ -240,7 +240,7 @@ function applyMatchVisibility() {
   nowPlayingBox.hidden = !inProgress;
   turnBarEl.hidden = !inProgress;
   statsBox.hidden = !inProgress;
-  gusherBadge.hidden = !inProgress;
+  riserBadge.hidden = !inProgress;
   grid.hidden = !inProgress;
   controlsEl.hidden = !inProgress;
   gameOverPanel.hidden = !(started && over);
@@ -305,7 +305,7 @@ function refreshAll() {
   renderGamesSelector();
   renderCollection();
   renderTurnHistory();
-  renderGusher();
+  renderRiser();
   applyMatchVisibility();
   maybeAdvanceMatch();
 }
@@ -322,11 +322,14 @@ function renderGrid() {
 
   cellsData.forEach(cellData => {
     const cell = document.createElement("div");
-    cell.className = "cell " + cellData.type;
 
     if (cellData.revealed) {
-      cell.classList.add("revealed");
-      cell.textContent = cellData.reward;
+      // Only now does the tile's real type ever touch the DOM — nothing
+      // about it (class, dataset, or content) is exposed before this.
+      cell.className = "cell " + cellData.type + " revealed";
+      cell.innerHTML =
+        `<span class="cell-icon">${ICONS[cellData.type]}</span>` +
+        `<span class="cell-value">${cellData.reward}</span>`;
       total += cellData.reward;
       revealedCount++;
       if (cellData.justRevealed) {
@@ -334,7 +337,10 @@ function renderGrid() {
         cellData.justRevealed = false;
       }
     } else {
-      cell.textContent = ICONS[cellData.type];
+      // Anonymous until picked: just a "?", with no class or attribute
+      // anywhere that would let inspecting the page reveal its type.
+      cell.className = "cell hidden";
+      cell.textContent = "?";
       cell.addEventListener("click", () => {
         if (Database.turnDigCount(Database.currentTurn(playerRecord())) >= MAX_DIGS_PER_TURN) return;
         cellData.revealed = true;
