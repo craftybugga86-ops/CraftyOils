@@ -2,11 +2,17 @@ package com.craftyoils.app;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import java.net.URISyntaxException;
 
 // Crafty Oils is a fully static, client-side game (HTML/CSS/JS using
 // localStorage for game state) — this Activity is just a WebView shell
@@ -42,11 +48,46 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccessFromFileURLs(false);
         settings.setAllowUniversalAccessFromFileURLs(false);
 
+        // Tells the shared Crafty bar (js/crafty-bar.js) it is inside a Crafty
+        // Android app, so other Crafty apps open as apps rather than web pages.
+        settings.setUserAgentString(settings.getUserAgentString() + " CraftyApp/works");
+
         // Keeps the title screen <-> Dig Grid navigation inside the app's
-        // own WebView instead of handing file:// links to an external app.
-        webView.setWebViewClient(new WebViewClient());
+        // own WebView. Links out of the game (other Crafty apps from the
+        // "Crafty apps" panel) go to the system instead: this app still has
+        // no network permission of its own.
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return openOutside(request.getUrl().toString());
+            }
+        });
 
         webView.loadUrl("file:///android_asset/index.html");
+    }
+
+    // file:///android_asset/ pages stay in the WebView; anything else leaves the app.
+    private boolean openOutside(String url) {
+        if (url.startsWith("file:///android_asset/")) return false;
+        try {
+            Intent intent;
+            if (url.startsWith("intent:")) {
+                // Only the package name is taken from the link; the intent is always a
+                // plain "open this app" launch, never whatever the link asks for.
+                String pkg = Intent.parseUri(url, Intent.URI_INTENT_SCHEME).getPackage();
+                if (pkg == null || !pkg.matches("[A-Za-z0-9_.]+")) return true;
+                intent = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(pkg);
+            } else if (url.startsWith("https:") || url.startsWith("http:")) {
+                intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            } else {
+                return true;
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (URISyntaxException | ActivityNotFoundException e) {
+            // Not installed: stay where we are.
+        }
+        return true;
     }
 
     @Override

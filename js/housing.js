@@ -52,6 +52,8 @@ function renderBuildings() {
 
     card.querySelector(".make-btn").addEventListener("click", () => {
       if (!Database.buildStructure(selectedPlayer, buildingId).built) return;
+      // Connected to a Crafty account? A finished building earns Crafty credits.
+      if (window.Crafty) window.Crafty.event("building.built");
       refresh();
       // refresh() rebuilt the grid, so pulse whatever card now sits in this
       // building's slot rather than the detached node we just clicked.
